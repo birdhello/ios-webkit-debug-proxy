@@ -1,0 +1,499 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2861D287AD57461091A63410 /* char_buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = EFD93C924F8E4CA482E53153 /* char_buffer.c */; };
+		32E33A586FD24C6294175027 /* websocket.c in Sources */ = {isa = PBXBuildFile; fileRef = 80C7F432BE644823A0D25CDE /* websocket.c */; };
+		412D38A603DA4BA0855ABCA8 /* hash_table.c in Sources */ = {isa = PBXBuildFile; fileRef = 734AB62657D84C74BA4A5728 /* hash_table.c */; };
+		4A82DC2E0FFC4F8FB20C638A /* ios_webkit_debug_proxy_main.c in Sources */ = {isa = PBXBuildFile; fileRef = 0B577DD81B8444C287209534 /* ios_webkit_debug_proxy_main.c */; };
+		5615D1721D9A4314BB0E89B5 /* webinspector.c in Sources */ = {isa = PBXBuildFile; fileRef = 6B41B0A69F5644F59A878CE1 /* webinspector.c */; };
+		647E81C89A3149679D61D21C /* rpc.c in Sources */ = {isa = PBXBuildFile; fileRef = 9C67C328659547A7AC8423BB /* rpc.c */; };
+		780D225D8E38444CABF756E4 /* device_listener.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A5D109BE51546509D892A97 /* device_listener.c */; };
+		783D9693B42C460199B9114A /* port_config.c in Sources */ = {isa = PBXBuildFile; fileRef = 09E1E7411A0D42848CFE80F8 /* port_config.c */; };
+		8E169F22370947AEAA7FFA0E /* idevice_ext.c in Sources */ = {isa = PBXBuildFile; fileRef = EE39DBB78F374D31927D71CF /* idevice_ext.c */; };
+		AB1A37CC47E1416A8F57B1CF /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 11AA13945D28445495307766 /* sha1.c */; };
+		AFF14D49D65249068A876B31 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = 6B5237DB431541818CDCB6BE /* base64.c */; };
+		C5258ED62F2B5C34008F9853 /* libimobiledevice-1.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C5258ED52F2B5C0E008F9853 /* libimobiledevice-1.0.a */; };
+		C5258ED82F2B5C64008F9853 /* libplist-2.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C5258ED72F2B5C58008F9853 /* libplist-2.0.a */; };
+		C5258EDA2F2B5C9E008F9853 /* libusbmuxd-2.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C5258ED92F2B5C8A008F9853 /* libusbmuxd-2.0.a */; };
+		C7D7A7E467834D9491152E9A /* ios_webkit_debug_proxy.c in Sources */ = {isa = PBXBuildFile; fileRef = FE15738124964D0191E48548 /* ios_webkit_debug_proxy.c */; };
+		F65801BEACA447AC805BD3F0 /* socket_manager.c in Sources */ = {isa = PBXBuildFile; fileRef = 9151E133C51048E7B16A3098 /* socket_manager.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		09E1E7411A0D42848CFE80F8 /* port_config.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = port_config.c; path = src/port_config.c; sourceTree = SOURCE_ROOT; };
+		0B577DD81B8444C287209534 /* ios_webkit_debug_proxy_main.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = ios_webkit_debug_proxy_main.c; path = src/ios_webkit_debug_proxy_main.c; sourceTree = SOURCE_ROOT; };
+		11AA13945D28445495307766 /* sha1.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = sha1.c; path = src/sha1.c; sourceTree = SOURCE_ROOT; };
+		6A5D109BE51546509D892A97 /* device_listener.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = device_listener.c; path = src/device_listener.c; sourceTree = SOURCE_ROOT; };
+		6B41B0A69F5644F59A878CE1 /* webinspector.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = webinspector.c; path = src/webinspector.c; sourceTree = SOURCE_ROOT; };
+		6B5237DB431541818CDCB6BE /* base64.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = base64.c; path = src/base64.c; sourceTree = SOURCE_ROOT; };
+		734AB62657D84C74BA4A5728 /* hash_table.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = hash_table.c; path = src/hash_table.c; sourceTree = SOURCE_ROOT; };
+		80C7F432BE644823A0D25CDE /* websocket.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = websocket.c; path = src/websocket.c; sourceTree = SOURCE_ROOT; };
+		869EB9CDF1EC42E6888DFE19 /* ios_webkit_debug_proxy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = ios_webkit_debug_proxy; sourceTree = BUILT_PRODUCTS_DIR; };
+		9151E133C51048E7B16A3098 /* socket_manager.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = socket_manager.c; path = src/socket_manager.c; sourceTree = SOURCE_ROOT; };
+		9C67C328659547A7AC8423BB /* rpc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = rpc.c; path = src/rpc.c; sourceTree = SOURCE_ROOT; };
+		C5258ED52F2B5C0E008F9853 /* libimobiledevice-1.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libimobiledevice-1.0.a"; path = "../../../../usr/local/Cellar/libimobiledevice/1.4.0/lib/libimobiledevice-1.0.a"; sourceTree = "<group>"; };
+		C5258ED72F2B5C58008F9853 /* libplist-2.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libplist-2.0.a"; path = "../../../../usr/local/Cellar/libplist/2.7.0/lib/libplist-2.0.a"; sourceTree = "<group>"; };
+		C5258ED92F2B5C8A008F9853 /* libusbmuxd-2.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libusbmuxd-2.0.a"; path = "../../../../usr/local/Cellar/libusbmuxd/2.1.1/lib/libusbmuxd-2.0.a"; sourceTree = "<group>"; };
+		EE39DBB78F374D31927D71CF /* idevice_ext.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = idevice_ext.c; path = src/idevice_ext.c; sourceTree = SOURCE_ROOT; };
+		EFD93C924F8E4CA482E53153 /* char_buffer.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = char_buffer.c; path = src/char_buffer.c; sourceTree = SOURCE_ROOT; };
+		FE15738124964D0191E48548 /* ios_webkit_debug_proxy.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = ios_webkit_debug_proxy.c; path = src/ios_webkit_debug_proxy.c; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A911E0A3012C4C97A51B5553 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5258ED62F2B5C34008F9853 /* libimobiledevice-1.0.a in Frameworks */,
+				C5258EDA2F2B5C9E008F9853 /* libusbmuxd-2.0.a in Frameworks */,
+				C5258ED82F2B5C64008F9853 /* libplist-2.0.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0132B06455484AAE850BF8E5 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		1C405F38603E4835A5A47D65 = {
+			isa = PBXGroup;
+			children = (
+				87A6400FBFD74D2A9ADF54BB /* ios_webkit_debug_proxy */,
+				8424E2889B21487EA803AD1B /* Products */,
+				AD05F6E156F74AD29D499E87 /* Frameworks */,
+				0132B06455484AAE850BF8E5 /* Resources */,
+			);
+			sourceTree = "<group>";
+		};
+		8424E2889B21487EA803AD1B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				869EB9CDF1EC42E6888DFE19 /* ios_webkit_debug_proxy */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		87A6400FBFD74D2A9ADF54BB /* ios_webkit_debug_proxy */ = {
+			isa = PBXGroup;
+			children = (
+				6B5237DB431541818CDCB6BE /* base64.c */,
+				EFD93C924F8E4CA482E53153 /* char_buffer.c */,
+				6A5D109BE51546509D892A97 /* device_listener.c */,
+				734AB62657D84C74BA4A5728 /* hash_table.c */,
+				EE39DBB78F374D31927D71CF /* idevice_ext.c */,
+				FE15738124964D0191E48548 /* ios_webkit_debug_proxy.c */,
+				0B577DD81B8444C287209534 /* ios_webkit_debug_proxy_main.c */,
+				09E1E7411A0D42848CFE80F8 /* port_config.c */,
+				9C67C328659547A7AC8423BB /* rpc.c */,
+				11AA13945D28445495307766 /* sha1.c */,
+				9151E133C51048E7B16A3098 /* socket_manager.c */,
+				6B41B0A69F5644F59A878CE1 /* webinspector.c */,
+				80C7F432BE644823A0D25CDE /* websocket.c */,
+			);
+			name = ios_webkit_debug_proxy;
+			sourceTree = "<group>";
+		};
+		AD05F6E156F74AD29D499E87 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C5258ED92F2B5C8A008F9853 /* libusbmuxd-2.0.a */,
+				C5258ED72F2B5C58008F9853 /* libplist-2.0.a */,
+				C5258ED52F2B5C0E008F9853 /* libimobiledevice-1.0.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		092324D9C4DAE423490F4194 /* ios_webkit_debug_proxy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 14A9276648384DA0899606FF /* Build configuration list for PBXNativeTarget "ios_webkit_debug_proxy" */;
+			buildPhases = (
+				18E73A104A434D68B9607F60 /* Sources */,
+				A911E0A3012C4C97A51B5553 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ios_webkit_debug_proxy;
+			productName = ios_webkit_debug_proxy;
+			productReference = 869EB9CDF1EC42E6888DFE19 /* ios_webkit_debug_proxy */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9FB2EB01326B4008BE8C9BBD /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1510;
+			};
+			buildConfigurationList = 24CDC1C0143F4FC298162001 /* Build configuration list for PBXProject "ios_webkit_debug_proxy" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1C405F38603E4835A5A47D65;
+			projectDirPath = "/Users/bird/GitHub/ios-webkit-debug-proxy";
+			projectRoot = "";
+			targets = (
+				092324D9C4DAE423490F4194 /* ios_webkit_debug_proxy */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		18E73A104A434D68B9607F60 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AFF14D49D65249068A876B31 /* base64.c in Sources */,
+				2861D287AD57461091A63410 /* char_buffer.c in Sources */,
+				780D225D8E38444CABF756E4 /* device_listener.c in Sources */,
+				412D38A603DA4BA0855ABCA8 /* hash_table.c in Sources */,
+				8E169F22370947AEAA7FFA0E /* idevice_ext.c in Sources */,
+				C7D7A7E467834D9491152E9A /* ios_webkit_debug_proxy.c in Sources */,
+				4A82DC2E0FFC4F8FB20C638A /* ios_webkit_debug_proxy_main.c in Sources */,
+				783D9693B42C460199B9114A /* port_config.c in Sources */,
+				647E81C89A3149679D61D21C /* rpc.c in Sources */,
+				AB1A37CC47E1416A8F57B1CF /* sha1.c in Sources */,
+				F65801BEACA447AC805BD3F0 /* socket_manager.c in Sources */,
+				5615D1721D9A4314BB0E89B5 /* webinspector.c in Sources */,
+				32E33A586FD24C6294175027 /* websocket.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0649E3B4DE314E91A0B1FFFA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = "";
+				SYMROOT = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/build";
+			};
+			name = Debug;
+		};
+		3A1EEADED5924CB596D11D5D /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/MinSizeRel";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
+					HAVE_CONFIG_H,
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"/Users/bird/GitHub/ios-webkit-debug-proxy",
+					"/Users/bird/GitHub/ios-webkit-debug-proxy/include",
+					"/Users/bird/GitHub/ios-webkit-debug-proxy/include/ios-webkit-debug-proxy",
+					/usr/local/Cellar/libimobiledevice/1.4.0/include,
+					/usr/local/Cellar/libusbmuxd/2.1.1/include,
+					"/usr/local/Cellar/libimobiledevice-glue/1.3.2/include",
+					/usr/local/Cellar/libplist/2.7.0/include,
+					"$(inherited)",
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/libimobiledevice/1.4.0/lib,
+					/usr/local/Cellar/libplist/2.7.0/lib,
+					/usr/local/Cellar/libusbmuxd/2.1.1/lib,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"'-std=gnu11'",
+					"$(inherited)",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					"-limobiledevice-1.0",
+					"-lplist-2.0",
+					"-lplist-2.0",
+					"-lusbmuxd-2.0",
+					"/usr/local/Cellar/openssl@3/3.6.0/lib/libssl.dylib",
+					"/usr/local/Cellar/openssl@3/3.6.0/lib/libcrypto.dylib",
+					"$(inherited)",
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ios_webkit_debug_proxy;
+				SECTORDER_FLAGS = "";
+				SYSTEM_HEADER_SEARCH_PATHS = "/usr/local/Cellar/openssl@3/3.6.0/include $(inherited)";
+				TARGET_TEMP_DIR = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/build/ios_webkit_debug_proxy.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = "$(inherited)";
+			};
+			name = MinSizeRel;
+		};
+		54E36F37634A40F3A6984923 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = "";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SYMROOT = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/build";
+			};
+			name = RelWithDebInfo;
+		};
+		57102AA50E5D42E882BA9545 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = "";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SYMROOT = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/build";
+			};
+			name = MinSizeRel;
+		};
+		AD140B930D1D4EA0A0AC457D /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/RelWithDebInfo";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
+					HAVE_CONFIG_H,
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"/Users/bird/GitHub/ios-webkit-debug-proxy",
+					"/Users/bird/GitHub/ios-webkit-debug-proxy/include",
+					"/Users/bird/GitHub/ios-webkit-debug-proxy/include/ios-webkit-debug-proxy",
+					/usr/local/Cellar/libimobiledevice/1.4.0/include,
+					/usr/local/Cellar/libusbmuxd/2.1.1/include,
+					"/usr/local/Cellar/libimobiledevice-glue/1.3.2/include",
+					/usr/local/Cellar/libplist/2.7.0/include,
+					"$(inherited)",
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/libimobiledevice/1.4.0/lib,
+					/usr/local/Cellar/libplist/2.7.0/lib,
+					/usr/local/Cellar/libusbmuxd/2.1.1/lib,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"'-std=gnu11'",
+					"$(inherited)",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					"-limobiledevice-1.0",
+					"-lplist-2.0",
+					"-lplist-2.0",
+					"-lusbmuxd-2.0",
+					"/usr/local/Cellar/openssl@3/3.6.0/lib/libssl.dylib",
+					"/usr/local/Cellar/openssl@3/3.6.0/lib/libcrypto.dylib",
+					"$(inherited)",
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ios_webkit_debug_proxy;
+				SECTORDER_FLAGS = "";
+				SYSTEM_HEADER_SEARCH_PATHS = "/usr/local/Cellar/openssl@3/3.6.0/include $(inherited)";
+				TARGET_TEMP_DIR = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/build/ios_webkit_debug_proxy.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = "$(inherited)";
+			};
+			name = RelWithDebInfo;
+		};
+		CF1D93B43B1746369A29B0BA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = "";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SYMROOT = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/build";
+			};
+			name = Release;
+		};
+		F056260C654E4261B2745553 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/Release";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
+					HAVE_CONFIG_H,
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"/Users/bird/GitHub/ios-webkit-debug-proxy",
+					"/Users/bird/GitHub/ios-webkit-debug-proxy/include",
+					"/Users/bird/GitHub/ios-webkit-debug-proxy/include/ios-webkit-debug-proxy",
+					/usr/local/Cellar/libimobiledevice/1.4.0/include,
+					/usr/local/Cellar/libusbmuxd/2.1.1/include,
+					"/usr/local/Cellar/libimobiledevice-glue/1.3.2/include",
+					/usr/local/Cellar/libplist/2.7.0/include,
+					"$(inherited)",
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/libimobiledevice/1.4.0/lib,
+					/usr/local/Cellar/libplist/2.7.0/lib,
+					/usr/local/Cellar/libusbmuxd/2.1.1/lib,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"'-std=gnu11'",
+					"$(inherited)",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					"-limobiledevice-1.0",
+					"-lplist-2.0",
+					"-lplist-2.0",
+					"-lusbmuxd-2.0",
+					"/usr/local/Cellar/openssl@3/3.6.0/lib/libssl.dylib",
+					"/usr/local/Cellar/openssl@3/3.6.0/lib/libcrypto.dylib",
+					"$(inherited)",
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ios_webkit_debug_proxy;
+				SECTORDER_FLAGS = "";
+				SYSTEM_HEADER_SEARCH_PATHS = "/usr/local/Cellar/openssl@3/3.6.0/include $(inherited)";
+				TARGET_TEMP_DIR = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/build/ios_webkit_debug_proxy.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = "$(inherited)";
+			};
+			name = Release;
+		};
+		FF54154EE09C40319DD02281 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/Debug";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
+					HAVE_CONFIG_H,
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"/Users/bird/GitHub/ios-webkit-debug-proxy",
+					"/Users/bird/GitHub/ios-webkit-debug-proxy/include",
+					"/Users/bird/GitHub/ios-webkit-debug-proxy/include/ios-webkit-debug-proxy",
+					/usr/local/Cellar/libimobiledevice/1.4.0/include,
+					/usr/local/Cellar/libusbmuxd/2.1.1/include,
+					"/usr/local/Cellar/libimobiledevice-glue/1.3.2/include",
+					/usr/local/Cellar/libplist/2.7.0/include,
+					"$(inherited)",
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/libimobiledevice/1.4.0/lib,
+					/usr/local/Cellar/libplist/2.7.0/lib,
+					/usr/local/Cellar/libusbmuxd/2.1.1/lib,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				OTHER_CFLAGS = (
+					"'-std=gnu11'",
+					"$(inherited)",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					"-limobiledevice-1.0",
+					"-lplist-2.0",
+					"-lplist-2.0",
+					"-lusbmuxd-2.0",
+					"/usr/local/Cellar/openssl@3/3.6.0/lib/libssl.dylib",
+					"/usr/local/Cellar/openssl@3/3.6.0/lib/libcrypto.dylib",
+					"$(inherited)",
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ios_webkit_debug_proxy;
+				SECTORDER_FLAGS = "";
+				SYSTEM_HEADER_SEARCH_PATHS = "/usr/local/Cellar/openssl@3/3.6.0/include $(inherited)";
+				TARGET_TEMP_DIR = "/Users/bird/GitHub/ios-webkit-debug-proxy/build-xcode/build/ios_webkit_debug_proxy.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = "$(inherited)";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		14A9276648384DA0899606FF /* Build configuration list for PBXNativeTarget "ios_webkit_debug_proxy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FF54154EE09C40319DD02281 /* Debug */,
+				F056260C654E4261B2745553 /* Release */,
+				3A1EEADED5924CB596D11D5D /* MinSizeRel */,
+				AD140B930D1D4EA0A0AC457D /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		24CDC1C0143F4FC298162001 /* Build configuration list for PBXProject "ios_webkit_debug_proxy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0649E3B4DE314E91A0B1FFFA /* Debug */,
+				CF1D93B43B1746369A29B0BA /* Release */,
+				57102AA50E5D42E882BA9545 /* MinSizeRel */,
+				54E36F37634A40F3A6984923 /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 9FB2EB01326B4008BE8C9BBD /* Project object */;
+}

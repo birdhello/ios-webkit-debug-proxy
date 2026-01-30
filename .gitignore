@@ -23,7 +23,6 @@ autoscan.log
 compile
 config.guess
 config.sub
-config.h
 config.h.in
 config.log
 config.status
