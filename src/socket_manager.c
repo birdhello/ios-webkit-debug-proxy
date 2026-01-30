@@ -675,7 +675,7 @@ int sm_select(sm_t self, int timeout_secs) {
       }
       if (can_recv) {
         sm_recv(self, fd);
-      }
+      } 
     }
   }
   return num_ready;

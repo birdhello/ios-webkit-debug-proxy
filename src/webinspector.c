@@ -263,6 +263,12 @@ wi_status wi_send(wi_t self, const char *data, size_t data_len) {
    __argument
  */
 wi_status wi_send_plist(wi_t self, plist_t rpc_dict) {
+    char *json_data = NULL;
+    uint32_t json_length = 0;
+    if (plist_to_json(rpc_dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
+        printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
+        free(json_data);
+    }
   wi_private_t my = self->private_state;
   char *rpc_bin = NULL;
   uint32_t rpc_len = 0;
@@ -416,6 +422,12 @@ wi_status wi_recv_packet(wi_t self, const char *packet, ssize_t length) {
     free(text);
     return ret;
   }
+    char *json_data = NULL;
+    uint32_t json_length = 0;
+    if (plist_to_json(rpc_dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
+        printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
+        free(json_data);
+    }
 
   if (is_partial) {
     return WI_SUCCESS;

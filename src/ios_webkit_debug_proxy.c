@@ -42,11 +42,15 @@ struct iwdp_private {
   char *sim_wi_socket_addr;
 };
 
-
+//设备监听/列表, IDL: interface device list
 #define TYPE_IDL   1
+// 端口转发/管理, IPORT: interface port
 #define TYPE_IPORT 2
+// Web Inspector (iOS 端), IWI: interface web inspcetor
 #define TYPE_IWI   3
+// Web Socket (Chrome 侧), IWS: interfac web socket
 #define TYPE_IWS   4
+// 文件流/选择器, IFS: interface file system
 #define TYPE_IFS   5
 
 /*!
@@ -382,6 +386,7 @@ dl_status iwdp_send_to_dl(dl_t dl, const char *buf, size_t length) {
 }
 
 dl_status iwdp_on_attach(dl_t dl, const char *device_id, int device_num) {
+    printf("%s:%d %s| iwdp_on_attach device_num: %d\n", __FILE__, __LINE__, __FUNCTION__, device_num);
   iwdp_t self = ((iwdp_idl_t)dl->state)->self;
   if (!device_id) {
     return self->on_error(self, "Null device_id");
