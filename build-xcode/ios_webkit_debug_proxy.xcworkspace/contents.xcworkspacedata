@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:iwdp_test/iwdp_test.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:ios_webkit_debug_proxy.xcodeproj">
+   </FileRef>
+</Workspace>
