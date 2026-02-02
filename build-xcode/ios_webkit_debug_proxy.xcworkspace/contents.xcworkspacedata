@@ -2,9 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:iwdp_test/iwdp_test.xcodeproj">
+      location = "group:ios_webkit_debug_proxy.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:ios_webkit_debug_proxy.xcodeproj">
+      location = "group:iwdp_test/iwdp_test.xcodeproj">
    </FileRef>
 </Workspace>

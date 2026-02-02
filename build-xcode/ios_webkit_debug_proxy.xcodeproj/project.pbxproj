@@ -111,9 +111,9 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 14A9276648384DA0899606FF /* Build configuration list for PBXNativeTarget "ios_webkit_debug_proxy" */;
 			buildPhases = (
+				C55809D22F2E51710001EF8C /* Run Script */,
 				18E73A104A434D68B9607F60 /* Sources */,
 				A911E0A3012C4C97A51B5553 /* Frameworks */,
-				C55809D22F2E51710001EF8C /* Run Script */,
 			);
 			buildRules = (
 			);
