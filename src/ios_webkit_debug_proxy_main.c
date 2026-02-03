@@ -246,7 +246,7 @@ int iwdpm_configure(iwdpm_t self, int argc, char **argv) {
   const char *DEFAULT_FRONTEND =
      "http://chrome-devtools-frontend.appspot.com/static/27.0.1453.93/devtools.html";
   // The port 27753 is from `locate com.apple.webinspectord.plist`
-  const char *DEFAULT_SIM_WI_SOCKET_ADDR = "localhost:27753";
+  const char *DEFAULT_SIM_WI_SOCKET_ADDR = "localhost:579605";
 
   self->config = strdup(DEFAULT_CONFIG);
   self->frontend = strdup(DEFAULT_FRONTEND);

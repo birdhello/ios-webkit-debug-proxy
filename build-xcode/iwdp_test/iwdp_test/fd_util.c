@@ -4,6 +4,7 @@
 
 #include <sys/fcntl.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 
 int fd_set_timeout(int fd, int timeout) {
     if (timeout < 0) {

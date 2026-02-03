@@ -50,6 +50,9 @@ int usbmuxd_connect_file(int recv_timeout) {
 
     fd_set_timeout(fd, recv_timeout);
 
+    if (max_fd_ == -1) {
+        FD_ZERO(&fd_set_);
+    }
     FD_SET(fd, &fd_set_);
     if (max_fd_ < fd) {
         max_fd_ = fd;

@@ -26,6 +26,9 @@ int main(int argc, const char * argv[]) {
         while (1) {
             result = usbmuxd_on_loop();
             if (result < 0) {
+                printf("%s:%d %s| usbmuxd_on_loop error code: %d\n",
+                       __FILE__, __LINE__, __FUNCTION__,
+                       result);
                 return result;
             }
         } // while(1)

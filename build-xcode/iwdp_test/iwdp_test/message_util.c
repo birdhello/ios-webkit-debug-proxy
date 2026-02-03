@@ -103,12 +103,15 @@ int message_select(fd_set fdSet, int max_fd, message_on_recv on_recv) {
     timeout.tv_sec = 2;
 
     fd_set temp_read_fds, temp_write_fds, temp_error_fds;
+    FD_ZERO(&temp_read_fds);
+    FD_ZERO(&temp_write_fds);
+    FD_ZERO(&temp_error_fds);
 
     memcpy(&temp_read_fds, &fdSet, FD_SET_SIZE);
     memcpy(&temp_write_fds, &fdSet, FD_SET_SIZE);
     memcpy(&temp_error_fds, &fdSet, FD_SET_SIZE);
 
-    int num_ready = select(max_fd, &temp_read_fds, &temp_write_fds, &temp_error_fds, &timeout);
+    int num_ready = select(max_fd + 1, &temp_read_fds, &temp_write_fds, &temp_error_fds, &timeout);
     if (num_ready == 0) {
         return 0;
     } else if (num_ready < 0) {
@@ -135,7 +138,7 @@ int message_select(fd_set fdSet, int max_fd, message_on_recv on_recv) {
                 // TODO
             }
             if (can_recv) {
-                fd_recv(fd, on_recv);
+                fd_recv(current_fd, on_recv);
             }
         } // for
     }

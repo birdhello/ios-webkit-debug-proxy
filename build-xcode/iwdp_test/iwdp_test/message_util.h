@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sys/select.h>
 #include <stddef.h>
 #include <stdio.h>
 
