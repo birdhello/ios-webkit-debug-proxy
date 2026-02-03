@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		C5258EEB2F304092008F9853 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C5258EEA2F304092008F9853 /* main.m */; };
+		C5258EF72F305C46008F9853 /* device.c in Sources */ = {isa = PBXBuildFile; fileRef = C5258EF62F305C46008F9853 /* device.c */; };
+		C5258EFA2F305C5D008F9853 /* iwdp.c in Sources */ = {isa = PBXBuildFile; fileRef = C5258EF92F305C5D008F9853 /* iwdp.c */; };
+		C5258EFD2F305EFA008F9853 /* usbmuxd_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C5258EFC2F305EFA008F9853 /* usbmuxd_util.c */; };
+		C5258F002F307CE4008F9853 /* message_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C5258EFF2F307CE4008F9853 /* message_util.c */; };
+		C5258F042F31ADD5008F9853 /* fd_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C5258F032F31ADD5008F9853 /* fd_util.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,7 +30,18 @@
 /* Begin PBXFileReference section */
 		C5258EE72F304092008F9853 /* iwdp_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = iwdp_test; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5258EEA2F304092008F9853 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		C5258EF22F304115008F9853 /* config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = config.xcconfig; path = ../config.xcconfig; sourceTree = "<group>"; };
+		C5258EF42F3043D9008F9853 /* config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = config.xcconfig; sourceTree = "<group>"; };
+		C5258EF52F305C46008F9853 /* device.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = device.h; sourceTree = "<group>"; };
+		C5258EF62F305C46008F9853 /* device.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = device.c; sourceTree = "<group>"; };
+		C5258EF82F305C5D008F9853 /* iwdp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iwdp.h; sourceTree = "<group>"; };
+		C5258EF92F305C5D008F9853 /* iwdp.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = iwdp.c; sourceTree = "<group>"; };
+		C5258EFB2F305EFA008F9853 /* usbmuxd_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = usbmuxd_util.h; sourceTree = "<group>"; };
+		C5258EFC2F305EFA008F9853 /* usbmuxd_util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = usbmuxd_util.c; sourceTree = "<group>"; };
+		C5258EFE2F307CE4008F9853 /* message_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = message_util.h; sourceTree = "<group>"; };
+		C5258EFF2F307CE4008F9853 /* message_util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = message_util.c; sourceTree = "<group>"; };
+		C5258F012F30A6DA008F9853 /* config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		C5258F022F31ADD5008F9853 /* fd_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fd_util.h; sourceTree = "<group>"; };
+		C5258F032F31ADD5008F9853 /* fd_util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = fd_util.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,7 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				C5258EE92F304092008F9853 /* iwdp_test */,
-				C5258EF22F304115008F9853 /* config.xcconfig */,
+				C5258EF42F3043D9008F9853 /* config.xcconfig */,
 				C5258EE82F304092008F9853 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -59,7 +75,18 @@
 		C5258EE92F304092008F9853 /* iwdp_test */ = {
 			isa = PBXGroup;
 			children = (
+				C5258F012F30A6DA008F9853 /* config.h */,
 				C5258EEA2F304092008F9853 /* main.m */,
+				C5258EF52F305C46008F9853 /* device.h */,
+				C5258EF62F305C46008F9853 /* device.c */,
+				C5258EF82F305C5D008F9853 /* iwdp.h */,
+				C5258EF92F305C5D008F9853 /* iwdp.c */,
+				C5258EFB2F305EFA008F9853 /* usbmuxd_util.h */,
+				C5258EFC2F305EFA008F9853 /* usbmuxd_util.c */,
+				C5258EFE2F307CE4008F9853 /* message_util.h */,
+				C5258EFF2F307CE4008F9853 /* message_util.c */,
+				C5258F022F31ADD5008F9853 /* fd_util.h */,
+				C5258F032F31ADD5008F9853 /* fd_util.c */,
 			);
 			path = iwdp_test;
 			sourceTree = "<group>";
@@ -71,6 +98,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = C5258EEE2F304092008F9853 /* Build configuration list for PBXNativeTarget "iwdp_test" */;
 			buildPhases = (
+				C5258EF32F304211008F9853 /* ShellScript */,
 				C5258EE32F304092008F9853 /* Sources */,
 				C5258EE42F304092008F9853 /* Frameworks */,
 				C5258EE52F304092008F9853 /* CopyFiles */,
@@ -116,12 +144,38 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		C5258EF32F304211008F9853 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "echo WORKSAPCE_PATH:${WORKSAPCE_PATH}\necho EXTERNAL_PATH:${EXTERNAL_PATH}\n\necho LIB_IMOBILEDEVICE_PATH:${LIB_IMOBILEDEVICE_PATH}\necho LIB_USBMUXD_PATH:${LIB_USBMUXD_PATH}\necho LIB_IMOBILEDEVICE_GLUE_PATH:${LIB_IMOBILEDEVICE_GLUE_PATH}\necho LIB_PLIST_PATH:${LIB_PLIST_PATH}\necho LIB_OPENSSL_PATH:${LIB_OPENSSL_PATH}\n\necho HEADER_SEARCH_PATHS:${HEADER_SEARCH_PATHS}\necho LIBRARY_SEARCH_PATHS:${LIBRARY_SEARCH_PATHS}\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		C5258EE32F304092008F9853 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C5258EFD2F305EFA008F9853 /* usbmuxd_util.c in Sources */,
+				C5258F002F307CE4008F9853 /* message_util.c in Sources */,
 				C5258EEB2F304092008F9853 /* main.m in Sources */,
+				C5258F042F31ADD5008F9853 /* fd_util.c in Sources */,
+				C5258EF72F305C46008F9853 /* device.c in Sources */,
+				C5258EFA2F305C5D008F9853 /* iwdp.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,7 +184,7 @@
 /* Begin XCBuildConfiguration section */
 		C5258EEC2F304092008F9853 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5258EF22F304115008F9853 /* config.xcconfig */;
+			baseConfigurationReference = C5258EF42F3043D9008F9853 /* config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -192,7 +246,7 @@
 		};
 		C5258EED2F304092008F9853 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5258EF22F304115008F9853 /* config.xcconfig */;
+			baseConfigurationReference = C5258EF42F3043D9008F9853 /* config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -247,7 +301,7 @@
 		};
 		C5258EEF2F304092008F9853 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5258EF22F304115008F9853 /* config.xcconfig */;
+			baseConfigurationReference = C5258EF42F3043D9008F9853 /* config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = WBDU8VNREF;
@@ -258,7 +312,7 @@
 		};
 		C5258EF02F304092008F9853 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C5258EF22F304115008F9853 /* config.xcconfig */;
+			baseConfigurationReference = C5258EF42F3043D9008F9853 /* config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = WBDU8VNREF;
