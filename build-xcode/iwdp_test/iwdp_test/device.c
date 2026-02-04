@@ -15,6 +15,22 @@
 #include "config.h"
 #include "iwdp.h"
 #include "fd_util.h"
+#include "message_util.h"
+#include "map_util.h"
+
+static fd_set fd_set_;
+static int max_fd_ = -1;
+static Map *fd_map_ = NULL;
+
+__attribute__((constructor)) static void device_constructor(void) {
+    FD_ZERO(&fd_set_);
+    fd_map_ = map_create();
+}
+
+__attribute__((destructor)) static void device_destructor(void) {
+    FD_ZERO(&fd_set_);
+    map_delete(fd_map_);
+}
 
 static const char *lockdownd_err_to_string(int ldret) {
   switch (ldret) {
@@ -166,6 +182,102 @@ static int idevice_ext_connection_enable_ssl(const char *device_id, int fd, SSL 
 }
 
 
+#include <uuid/uuid.h>
+
+int rpc_new_uuid(char **to_uuid) {
+    if (!to_uuid) {
+        return -1;
+    }
+    *to_uuid = (char *)malloc(37);
+    uuid_t uuid;
+    uuid_generate(uuid);
+    uuid_unparse_upper(uuid, *to_uuid);
+    return true;
+}
+
+plist_t rpc_new_args(const char *connection_id) {
+    plist_t ret = plist_new_dict();
+    if (connection_id) {
+        plist_dict_set_item(ret, "WIRConnectionIdentifierKey",
+                            plist_new_string(connection_id));
+    }
+    return ret;
+}
+
+static int device_send(int fd, const char *data, size_t data_len) {
+    size_t length = data_len + 4;
+    char *out_head = (char*)malloc(length);
+    if (!out_head) {
+      return -1;
+    }
+    char *out_tail = out_head;
+
+    // write big-endian int
+    *out_tail++ = ((data_len >> 24) & 0xFF);
+    *out_tail++ = ((data_len >> 16) & 0xFF);
+    *out_tail++ = ((data_len >> 8) & 0xFF);
+    *out_tail++ = (data_len & 0xFF);
+
+    if (data) {
+      memcpy(out_tail, data, data_len);
+    }
+
+    int ret;
+    SSL *ssl = map_get(fd_map_, fd);
+    if (ssl) {
+        ret = ssl_send(ssl, out_head, length);
+    } else {
+        ret = fd_send(fd, out_head, length);
+    }
+    free(out_head);
+    return ret;
+}
+
+static int send_plist(int fd, plist_t rpc_dict) {
+    char *rpc_bin = NULL;
+    uint32_t rpc_len = 0;
+    plist_to_bin(rpc_dict, &rpc_bin, &rpc_len);
+
+    int ret = device_send(fd, rpc_bin, rpc_len);
+    free(rpc_bin);
+    // TODO
+    bool is_sim = false;
+    if (!is_sim) {
+        // webinspectord may not ack the message with relatively big payloads
+        // sending an empty payload to prompt the processing of the last message
+        device_send(fd, NULL, 0);
+    }
+    return ret;
+}
+
+static int rpc_send_msg(int fd, const char *selector, plist_t args) {
+    if (!selector || !args) {
+        return -1;
+    }
+    plist_t rpc_dict = plist_new_dict();
+    plist_dict_set_item(rpc_dict, "__selector",
+                        plist_new_string(selector));
+    plist_dict_set_item(rpc_dict, "__argument", plist_copy(args));
+
+
+    int ret = send_plist(fd, rpc_dict);
+
+    plist_free(rpc_dict);
+    return ret;
+}
+
+
+int rpc_send_reportIdentifier(int fd, const char *connection_id) {
+  if (!connection_id) {
+    return -1;
+  }
+  const char *selector = "_rpc_reportIdentifier:";
+  plist_t args = rpc_new_args(connection_id);
+  int ret = rpc_send_msg(fd, selector, args);
+  plist_free(args);
+  return ret;
+}
+
 int device_attach(const char *device_id, int device_num) {
     printf("%s:%d %s| device_id: %s, device_num: %d\n",
            __FILE__, __LINE__, __FUNCTION__,
@@ -280,6 +392,20 @@ int device_attach(const char *device_id, int device_num) {
         goto leave_cleanup;
     }
     fail = false;
+    
+    FD_SET(fd, &fd_set_);
+    if (max_fd_ < fd) {
+        max_fd_ = fd;
+    }
+    map_set(fd_map_, fd, ssl);
+
+
+    // start inspector
+    char *connectionID = NULL;
+    rpc_new_uuid(&connectionID);
+    if (rpc_send_reportIdentifier(fd, connectionID) < 0) {
+        // TODO
+    }
 
 leave_cleanup:
     if (fail && fd > 0) {
@@ -291,4 +417,153 @@ leave_cleanup:
     lockdownd_client_free(client);
     idevice_free(phone);
     return fd;
+}
+
+// some arbitrarly limit, to catch bad packets
+#define MAX_BODY_LENGTH 1<<26
+
+int wi_parse_length(const char *buf, size_t *to_length) {
+    if (!buf || !to_length) {
+        return -1;
+    }
+    *to_length = (
+                  ((((unsigned char) buf[0]) & 0xFF) << 24) |
+                  ((((unsigned char) buf[1]) & 0xFF) << 16) |
+                  ((((unsigned char) buf[2]) & 0xFF) << 8) |
+                  (((unsigned char) buf[3]) & 0xFF));
+    if (MAX_BODY_LENGTH > 0 && *to_length > MAX_BODY_LENGTH) {
+#define TO_CHAR(c) ((c) >= ' ' && (c) < '~' ? (c) : '.')
+
+        printf("%s:%d %s Invalid packet header 0x%x%x%x%x == %c%c%c%c == %zd\n",
+               __FILE__, __LINE__, __FUNCTION__,
+               buf[0], buf[1], buf[2], buf[3],
+               TO_CHAR(buf[0]), TO_CHAR(buf[1]),
+               TO_CHAR(buf[2]), TO_CHAR(buf[3]),
+               *to_length);
+        return -1;
+    }
+    return 0;
+}
+
+int wi_parse_plist(const char *from_buf, size_t length, plist_t *to_rpc_dict, bool *to_is_partial) {
+    *to_is_partial = false;
+    *to_rpc_dict = NULL;
+
+    // TODO
+    bool partials_supported = false;
+    if (!partials_supported) {
+        plist_from_bin(from_buf, length, to_rpc_dict);
+    } else {
+        plist_t wi_dict = NULL;
+        plist_from_bin(from_buf, length, &wi_dict);
+        if (!wi_dict) {
+            return -1;
+        }
+        plist_t wi_rpc = plist_dict_get_item(wi_dict, "WIRFinalMessageKey");
+        if (!wi_rpc) {
+            wi_rpc = plist_dict_get_item(wi_dict, "WIRPartialMessageKey");
+            if (!wi_rpc) {
+                return -1;
+            }
+            *to_is_partial = true;
+        }
+
+        uint64_t rpc_len = 0;
+        char *rpc_bin = NULL;
+        plist_get_data_val(wi_rpc, &rpc_bin, &rpc_len);
+        plist_free(wi_dict); // also frees wi_rpc
+        if (!rpc_bin) {
+            return -1;
+        }
+        // assert rpc_len < MAX_RPC_LEN?
+
+//        size_t p_length = my->partial->tail - my->partial->head;
+//        if (*to_is_partial || p_length) {
+//            if (cb_ensure_capacity(my->partial, rpc_len)) {
+//                return self->on_error(self, "Out of memory");
+//            }
+//            memcpy(my->partial->tail, rpc_bin, rpc_len);
+//            my->partial->tail += rpc_len;
+//            p_length += rpc_len;
+//            free(rpc_bin);
+//            if (*to_is_partial) {
+//                return 0;
+//            }
+//        }
+//
+//        if (p_length) {
+//            plist_from_bin(my->partial->head, (uint32_t)p_length, to_rpc_dict);
+//            cb_clear(my->partial);
+//        } else {
+//            plist_from_bin(rpc_bin, (uint32_t)rpc_len, to_rpc_dict);
+//            free(rpc_bin);
+//        }
+    }
+
+    return (*to_rpc_dict ? 0 : -1);
+}
+
+static int device_on_recv_(const char *packet, size_t length) {
+    printf("%s:%d %s| length: %zu, message:%s\n",
+           __FILE__, __LINE__, __FUNCTION__,
+           length, packet);
+
+
+    size_t body_length = 0;
+    plist_t rpc_dict = NULL;
+    bool is_partial = false;
+    if (!packet || length < 4 || wi_parse_length(packet, &body_length) ||
+        //TODO (body_length != length - 4) ||
+        wi_parse_plist(packet + 4, body_length, &rpc_dict, &is_partial)) {
+        // invalid packet
+        char *text = NULL;
+        if (body_length != length - 4) {
+            if (asprintf(&text, "size %zd != %zd - 4", body_length, length) < 0) {
+                printf("%s:%d %s| asprintf failed\n",
+                       __FILE__, __LINE__, __FUNCTION__);
+                return -1;
+            }
+        } else {
+            //        cb_asprint(&text, packet, length, 80, 50);
+        }
+        printf("%s:%d %s| Invalid packet:\n%s\n",
+               __FILE__, __LINE__, __FUNCTION__,
+               text);
+        free(text);
+        return -1;
+    }
+    char *json_data = NULL;
+    uint32_t json_length = 0;
+    if (plist_to_openstep(rpc_dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
+        printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
+        free(json_data);
+    }
+
+    if (is_partial) {
+        return 0;
+    }
+    // TODO
+//    wi_status ret = self->recv_plist(self, rpc_dict);
+    plist_free(rpc_dict);
+//    return ret;
+
+    return 0;
+}
+
+static int device_on_recv_ready_(int fd) {
+    SSL *ssl = map_get(fd_map_, fd);
+    if (ssl) {
+        ssl_recv(ssl, device_on_recv_);
+    } else {
+        fd_recv(fd, device_on_recv_);
+    }
+    return 0;
+}
+
+int device_on_loop(void) {
+    int result = message_select(fd_set_, max_fd_, device_on_recv_ready_);
+    if (result < 0) {
+        return result;
+    }
+    return result;
 }

@@ -24,6 +24,10 @@
 static fd_set fd_set_;
 static int max_fd_ = -1;
 
+__attribute__((constructor)) static void usbmuxd_init(void) {
+    FD_ZERO(&fd_set_);
+}
+
 int usbmuxd_connect_file(int recv_timeout) {
     const char *filename = USBMUXD_FILE_PATH;
     struct stat fst;
@@ -50,9 +54,6 @@ int usbmuxd_connect_file(int recv_timeout) {
 
     fd_set_timeout(fd, recv_timeout);
 
-    if (max_fd_ == -1) {
-        FD_ZERO(&fd_set_);
-    }
     FD_SET(fd, &fd_set_);
     if (max_fd_ < fd) {
         max_fd_ = fd;
@@ -117,7 +118,7 @@ static uint32_t dl_sscanf_uint32(const char *buf) {
     return ret;
 }
 
-int dl_recv_packet(const char *packet, size_t length) {
+static int usb_muxd_on_recv_(const char *packet, size_t length) {
     const char *tail = packet;
     uint32_t len = dl_sscanf_uint32(tail);
     tail += 4;
@@ -139,25 +140,31 @@ int dl_recv_packet(const char *packet, size_t length) {
 
     plist_t dict = NULL;
     plist_from_xml(xml, (uint32_t) xml_length, &dict);
-    char *message = NULL;
+    char *messageType = NULL;
     if (dict) {
         char *json_data = NULL;
         uint32_t json_length = 0;
-        if (plist_to_json(dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
-            printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
+        plist_err_t plistErrorCode = plist_to_openstep(dict, &json_data, &json_length, true);
+        if (plistErrorCode == PLIST_ERR_SUCCESS) {
+            printf("%s:%d %s| \n%s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
             free(json_data);
+        } else {
+            printf("%s:%d %s| plist_to_json error code: %d, type: %d, xml: \n%s\n",
+                   __FILE__, __LINE__, __FUNCTION__,
+                   plistErrorCode, plist_get_node_type(dict), xml);
         }
 
         plist_t node = plist_dict_get_item(dict, "MessageType");
         if (plist_get_node_type(node) == PLIST_STRING) {
-            plist_get_string_val(node, &message);
+            plist_get_string_val(node, &messageType);
         }
     }
 
     int ret = -1;
-    if (!message) {
+    if (!messageType) {
         ret = -1;
-    } else if (!strcmp(message, "Result")) {
+        printf("%s:%d %s| invalid message type\n", __FILE__, __LINE__, __FUNCTION__);
+    } else if (!strcmp(messageType, "Result")) {
         plist_t node = plist_dict_get_item(dict, "Number");
         if (node) {
             uint64_t value = 0;
@@ -165,7 +172,7 @@ int dl_recv_packet(const char *packet, size_t length) {
             // just an ack of our Listen?
             ret = (value ? -1 : 0);
         }
-    } else if (!strcmp(message, "Attached")) {
+    } else if (!strcmp(messageType, "Attached")) {
         plist_t props = plist_dict_get_item(dict, "Properties");
         if (props) {
             uint64_t device_num = 0;
@@ -200,7 +207,7 @@ int dl_recv_packet(const char *packet, size_t length) {
             printf("%s:%d %s| device_id: %s\n", __FILE__, __LINE__, __FUNCTION__, device_id);
             ret = device_attach(device_id, (int) device_num);
         }
-    } else if (strcmp(message, "Detached") == 0) {
+    } else if (strcmp(messageType, "Detached") == 0) {
         plist_t node = plist_dict_get_item(dict, "DeviceID");
         if (node) {
             uint64_t device_num = 0;
@@ -214,12 +221,12 @@ int dl_recv_packet(const char *packet, size_t length) {
 //            }
         }
     }
-    free(message);
+    free(messageType);
     plist_free(dict);
     return ret;
 }
 
-int usbmuxd_on_recv(const char *data, size_t length) {
+static int usbmuxd_on_recv_(const char *data, size_t length) {
     bool has_body_length = false;
     size_t body_length = 0;
     size_t data_length = length;
@@ -232,7 +239,7 @@ int usbmuxd_on_recv(const char *data, size_t length) {
             // don't advance in_head yet
         } else if (has_body_length && data_length >= body_length) {
             // can read body now
-            int ret = dl_recv_packet(data, body_length);
+            int ret = usb_muxd_on_recv_(data, body_length);
             data += body_length;
             data_length -= body_length;
             has_body_length = false;
@@ -249,6 +256,18 @@ int usbmuxd_on_recv(const char *data, size_t length) {
     }
 }
 
+static int usbmuxd_on_recv_ready_(int fd) {
+    return fd_recv(fd, usbmuxd_on_recv_);
+}
+
 int usbmuxd_on_loop(void) {
-    return message_select(fd_set_, max_fd_, usbmuxd_on_recv);
+    int result = message_select(fd_set_, max_fd_, usbmuxd_on_recv_ready_);
+    if (result < 0) {
+        return result;
+    }
+    result = device_on_loop();
+    if (result < 0) {
+        return result;
+    }
+    return result;
 }

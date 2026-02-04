@@ -13,6 +13,7 @@
 		C5258EFD2F305EFA008F9853 /* usbmuxd_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C5258EFC2F305EFA008F9853 /* usbmuxd_util.c */; };
 		C5258F002F307CE4008F9853 /* message_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C5258EFF2F307CE4008F9853 /* message_util.c */; };
 		C5258F042F31ADD5008F9853 /* fd_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C5258F032F31ADD5008F9853 /* fd_util.c */; };
+		C549D88B2F3333C20095D39F /* map_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C549D88A2F3333C20095D39F /* map_util.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -42,6 +43,9 @@
 		C5258F012F30A6DA008F9853 /* config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		C5258F022F31ADD5008F9853 /* fd_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fd_util.h; sourceTree = "<group>"; };
 		C5258F032F31ADD5008F9853 /* fd_util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = fd_util.c; sourceTree = "<group>"; };
+		C5258F052F33230F008F9853 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C549D8892F3333C20095D39F /* map_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = map_util.h; sourceTree = "<group>"; };
+		C549D88A2F3333C20095D39F /* map_util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = map_util.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +64,7 @@
 			children = (
 				C5258EE92F304092008F9853 /* iwdp_test */,
 				C5258EF42F3043D9008F9853 /* config.xcconfig */,
+				C5258F052F33230F008F9853 /* Info.plist */,
 				C5258EE82F304092008F9853 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -87,6 +92,8 @@
 				C5258EFF2F307CE4008F9853 /* message_util.c */,
 				C5258F022F31ADD5008F9853 /* fd_util.h */,
 				C5258F032F31ADD5008F9853 /* fd_util.c */,
+				C549D8892F3333C20095D39F /* map_util.h */,
+				C549D88A2F3333C20095D39F /* map_util.c */,
 			);
 			path = iwdp_test;
 			sourceTree = "<group>";
@@ -174,6 +181,7 @@
 				C5258F002F307CE4008F9853 /* message_util.c in Sources */,
 				C5258EEB2F304092008F9853 /* main.m in Sources */,
 				C5258F042F31ADD5008F9853 /* fd_util.c in Sources */,
+				C549D88B2F3333C20095D39F /* map_util.c in Sources */,
 				C5258EF72F305C46008F9853 /* device.c in Sources */,
 				C5258EFA2F305C5D008F9853 /* iwdp.c in Sources */,
 			);
@@ -304,9 +312,16 @@
 			baseConfigurationReference = C5258EF42F3043D9008F9853 /* config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = WBDU8VNREF;
 				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bird.iwdp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -315,9 +330,16 @@
 			baseConfigurationReference = C5258EF42F3043D9008F9853 /* config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = WBDU8VNREF;
 				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bird.iwdp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

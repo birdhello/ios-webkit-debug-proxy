@@ -11,6 +11,10 @@
 #define FD_SET_SIZE sizeof(struct fd_set)
 
 int fd_send(int fd, const char *data, size_t length) {
+    printf("%s:%d %s| fd: %d, bytes: %zu\n",
+           __FILE__, __LINE__, __FUNCTION__,
+           fd, length);
+
     while (length != 0) {
         ssize_t sent_bytes = send(fd, (const void *) data, length, 0);
         if (sent_bytes <= 0) {
@@ -24,6 +28,10 @@ int fd_send(int fd, const char *data, size_t length) {
 }
 
 int ssl_send(SSL *ssl, const char *data, size_t length) {
+    printf("%s:%d %s| ssl: %p, bytes: %zu\n",
+           __FILE__, __LINE__, __FUNCTION__,
+           ssl, length);
+
     int write_length;
     while (length != 0) {
         if (length > INT_MAX) {
@@ -46,7 +54,7 @@ int ssl_send(SSL *ssl, const char *data, size_t length) {
     return 0;
 }
 
-int fd_recv(int fd, message_on_recv on_recv) {
+int fd_recv(int fd, data_on_recv on_recv) {
     const int tmp_buf_length = 4096;
     char *tmp_buf[tmp_buf_length];
 
@@ -73,23 +81,29 @@ int fd_recv(int fd, message_on_recv on_recv) {
     }
 }
 
-int ssl_recv(SSL *ssl, message_on_recv on_recv) {
+int ssl_recv(SSL *ssl, data_on_recv on_recv) {
     const int tmp_buf_length = 4096;
     char *tmp_buf[tmp_buf_length];
 
-    ssize_t read_bytes;
+    int read_bytes;
     while (1) {
         read_bytes = SSL_read(ssl, tmp_buf, tmp_buf_length);
         if (read_bytes < 0) {
-            int error = SSL_get_error(ssl, (int) read_bytes);
-            printf("%s:%d %s| ssl: %p SSL_read error code: %d, read_bytes: %zi\n",
-                   __FILE__, __LINE__, __FUNCTION__,
-                   ssl, error, read_bytes);
-            return -1;
+            int error = SSL_get_error(ssl, read_bytes);
+            if (error != SSL_ERROR_WANT_READ && error != SSL_ERROR_WANT_WRITE) {
+                printf("%s:%d %s| ssl: %p SSL_read error code: %d, read_bytes: %d\n",
+                       __FILE__, __LINE__, __FUNCTION__,
+                       ssl, error, read_bytes);
+                return -1;
+            }
+            return 0;
         } else if (read_bytes == 0) {
             return 0;
         }
 
+        printf("%s:%d %s| ssl: %p, bytes: %d\n",
+               __FILE__, __LINE__, __FUNCTION__,
+               ssl, read_bytes);
         int result = on_recv((const char *) tmp_buf, read_bytes);
         if (result < 0) {
             return result;
@@ -138,7 +152,7 @@ int message_select(fd_set fdSet, int max_fd, message_on_recv on_recv) {
                 // TODO
             }
             if (can_recv) {
-                fd_recv(current_fd, on_recv);
+                on_recv(current_fd);
             }
         } // for
     }

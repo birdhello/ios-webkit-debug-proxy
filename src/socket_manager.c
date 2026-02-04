@@ -598,9 +598,9 @@ void sm_recv(sm_t self, int fd) {
     } else {
       read_bytes = SSL_read((SSL *)ssl_session, my->tmp_buf, my->tmp_buf_length);
       if (read_bytes <= 0) {
-        if (SSL_get_error(ssl_session, read_bytes) != SSL_ERROR_WANT_READ &&
-            SSL_get_error(ssl_session, read_bytes) != SSL_ERROR_WANT_WRITE) {
-          perror("ssl recv failed");
+          int ssl_error = SSL_get_error(ssl_session, read_bytes);
+        if (ssl_error != SSL_ERROR_WANT_READ && ssl_error != SSL_ERROR_WANT_WRITE) {
+          printf("%s:%d %s| ssl recv error code: %d\n", __FILE__, __LINE__, __FUNCTION__, ssl_error);
           self->remove_fd(self, fd);
         }
         break;
