@@ -168,3 +168,7 @@ bool map_node_remove(Map *map, MapNode *node) {
 void map_node_modify(MapNode *node, void *value) {
     node->value = value;
 }
+
+void *map_node_get(MapNode *node) {
+    return node->value;
+}

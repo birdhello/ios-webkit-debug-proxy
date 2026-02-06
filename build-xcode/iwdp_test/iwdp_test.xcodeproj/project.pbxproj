@@ -14,6 +14,8 @@
 		C5258F002F307CE4008F9853 /* message_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C5258EFF2F307CE4008F9853 /* message_util.c */; };
 		C5258F042F31ADD5008F9853 /* fd_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C5258F032F31ADD5008F9853 /* fd_util.c */; };
 		C549D88B2F3333C20095D39F /* map_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C549D88A2F3333C20095D39F /* map_util.c */; };
+		C549D88E2F3478760095D39F /* application_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C549D88D2F3478760095D39F /* application_util.c */; };
+		C549D8912F3480090095D39F /* plist_util.c in Sources */ = {isa = PBXBuildFile; fileRef = C549D8902F3480090095D39F /* plist_util.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -46,6 +48,10 @@
 		C5258F052F33230F008F9853 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C549D8892F3333C20095D39F /* map_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = map_util.h; sourceTree = "<group>"; };
 		C549D88A2F3333C20095D39F /* map_util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = map_util.c; sourceTree = "<group>"; };
+		C549D88C2F3478760095D39F /* application_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = application_util.h; sourceTree = "<group>"; };
+		C549D88D2F3478760095D39F /* application_util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = application_util.c; sourceTree = "<group>"; };
+		C549D88F2F3480090095D39F /* plist_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = plist_util.h; sourceTree = "<group>"; };
+		C549D8902F3480090095D39F /* plist_util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = plist_util.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +100,10 @@
 				C5258F032F31ADD5008F9853 /* fd_util.c */,
 				C549D8892F3333C20095D39F /* map_util.h */,
 				C549D88A2F3333C20095D39F /* map_util.c */,
+				C549D88C2F3478760095D39F /* application_util.h */,
+				C549D88D2F3478760095D39F /* application_util.c */,
+				C549D88F2F3480090095D39F /* plist_util.h */,
+				C549D8902F3480090095D39F /* plist_util.c */,
 			);
 			path = iwdp_test;
 			sourceTree = "<group>";
@@ -177,10 +187,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C549D8912F3480090095D39F /* plist_util.c in Sources */,
 				C5258EFD2F305EFA008F9853 /* usbmuxd_util.c in Sources */,
 				C5258F002F307CE4008F9853 /* message_util.c in Sources */,
 				C5258EEB2F304092008F9853 /* main.m in Sources */,
 				C5258F042F31ADD5008F9853 /* fd_util.c in Sources */,
+				C549D88E2F3478760095D39F /* application_util.c in Sources */,
 				C549D88B2F3333C20095D39F /* map_util.c in Sources */,
 				C5258EF72F305C46008F9853 /* device.c in Sources */,
 				C5258EFA2F305C5D008F9853 /* iwdp.c in Sources */,

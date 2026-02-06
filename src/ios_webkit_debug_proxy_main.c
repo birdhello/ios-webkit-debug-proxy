@@ -172,6 +172,7 @@ sm_status iwdpm_on_sent(sm_t sm, int fd, void *value,
 sm_status iwdpm_on_recv(sm_t sm, int fd, void *value,
     const char *buf, ssize_t length) {
   iwdp_t iwdp = ((iwdpm_t)sm->state)->iwdp;
+    printf("%s:%d %s| length: %zu\n", __FILE__, __LINE__, __FUNCTION__, length);
   return iwdp->on_recv(iwdp, fd, value, buf, length);
 }
 sm_status iwdpm_on_close(sm_t sm, int fd, void *value, bool is_server) {

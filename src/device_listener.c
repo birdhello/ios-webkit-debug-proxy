@@ -212,7 +212,10 @@ dl_status dl_recv_packet(dl_t self, const char *packet, size_t length) {
   if (dict) {
       char *json_data = NULL;
       uint32_t json_length = 0;
-      if (plist_to_openstep(dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
+      if (plist_to_json(dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
+          printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
+          free(json_data);
+      } else if (plist_to_xml(dict, &json_data, &json_length) == PLIST_ERR_SUCCESS) {
           printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
           free(json_data);
       }

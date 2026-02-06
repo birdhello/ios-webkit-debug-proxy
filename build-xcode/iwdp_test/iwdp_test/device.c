@@ -16,7 +16,9 @@
 #include "iwdp.h"
 #include "fd_util.h"
 #include "message_util.h"
+#include "application_util.h"
 #include "map_util.h"
+#include "plist_util.h"
 
 static fd_set fd_set_;
 static int max_fd_ = -1;
@@ -30,6 +32,85 @@ __attribute__((constructor)) static void device_constructor(void) {
 __attribute__((destructor)) static void device_destructor(void) {
     FD_ZERO(&fd_set_);
     map_delete(fd_map_);
+}
+
+typedef struct {
+    SSL *ssl;
+    char *connectionID;
+    int fd;
+
+    void *recvData;
+    size_t recvCapacity;
+    size_t recvSize;
+    void *recvRead;
+} DeviceInfo_;
+
+int device_append_recv_data(DeviceInfo_ *deviceInfo, const char *rpc_bin, size_t rpc_len) {
+    size_t needSize = deviceInfo->recvSize + rpc_len;
+    if (needSize > deviceInfo->recvCapacity) {
+        size_t capacity = deviceInfo->recvCapacity < 4? 4 : deviceInfo->recvCapacity;
+        do {
+            capacity *= 1.5;
+        } while(capacity < needSize);
+        size_t readSize = deviceInfo->recvRead - deviceInfo->recvData;
+        char *new_begin = (char *) realloc(deviceInfo->recvData, capacity);
+        if (!new_begin) {
+            return -1;
+        }
+        deviceInfo->recvData = new_begin;
+        deviceInfo->recvCapacity = capacity;
+        deviceInfo->recvRead = deviceInfo->recvData + readSize;
+    }
+
+    memcpy(deviceInfo->recvData + deviceInfo->recvSize, rpc_bin, rpc_len);
+    deviceInfo->recvSize += rpc_len;
+    return 0;
+}
+
+void device_free_recv_data(DeviceInfo_ *deviceInfo) {
+    free(deviceInfo->recvData);
+    deviceInfo->recvData = 0;
+    deviceInfo->recvCapacity = 0;
+    deviceInfo->recvSize = 0;
+    deviceInfo->recvRead = 0;
+}
+
+DeviceInfo_ *map_set_by_fd_(int fd) {
+    DeviceInfo_ *deviceInfo = malloc(sizeof(DeviceInfo_));
+    memset(deviceInfo, 0, sizeof(DeviceInfo_));
+    map_set(fd_map_, fd, deviceInfo);
+    return deviceInfo;
+}
+
+void map_remove_by_fd_(int fd) {
+    MapNode *iterator = map_find(fd_map_, fd);
+    if (iterator) {
+        DeviceInfo_ *deviceInfo = map_node_get(iterator);
+        if (deviceInfo->recvData) {
+            free(deviceInfo->recvData);
+        }
+        free(deviceInfo);
+        map_node_remove(fd_map_, iterator);
+    }
+}
+
+DeviceInfo_ *map_get_device_info_(int fd) {
+    return map_get(fd_map_, fd);
+}
+
+void map_set_ssl_(int fd, SSL *ssl) {
+    DeviceInfo_ *deviceInfo = map_get(fd_map_, fd);
+    if (deviceInfo) {
+        deviceInfo->ssl = ssl;
+    }
+}
+
+SSL *map_get_ssl_(int fd) {
+    DeviceInfo_ *deviceInfo = map_get(fd_map_, fd);
+    if (deviceInfo) {
+        return deviceInfo->ssl;
+    }
+    return 0;
 }
 
 static const char *lockdownd_err_to_string(int ldret) {
@@ -204,52 +285,6 @@ plist_t rpc_new_args(const char *connection_id) {
     return ret;
 }
 
-static int device_send(int fd, const char *data, size_t data_len) {
-    size_t length = data_len + 4;
-    char *out_head = (char*)malloc(length);
-    if (!out_head) {
-      return -1;
-    }
-    char *out_tail = out_head;
-
-    // write big-endian int
-    *out_tail++ = ((data_len >> 24) & 0xFF);
-    *out_tail++ = ((data_len >> 16) & 0xFF);
-    *out_tail++ = ((data_len >> 8) & 0xFF);
-    *out_tail++ = (data_len & 0xFF);
-
-    if (data) {
-      memcpy(out_tail, data, data_len);
-    }
-
-    int ret;
-    SSL *ssl = map_get(fd_map_, fd);
-    if (ssl) {
-        ret = ssl_send(ssl, out_head, length);
-    } else {
-        ret = fd_send(fd, out_head, length);
-    }
-    free(out_head);
-    return ret;
-}
-
-static int send_plist(int fd, plist_t rpc_dict) {
-    char *rpc_bin = NULL;
-    uint32_t rpc_len = 0;
-    plist_to_bin(rpc_dict, &rpc_bin, &rpc_len);
-
-    int ret = device_send(fd, rpc_bin, rpc_len);
-    free(rpc_bin);
-    // TODO
-    bool is_sim = false;
-    if (!is_sim) {
-        // webinspectord may not ack the message with relatively big payloads
-        // sending an empty payload to prompt the processing of the last message
-        device_send(fd, NULL, 0);
-    }
-    return ret;
-}
-
 static int rpc_send_msg(int fd, const char *selector, plist_t args) {
     if (!selector || !args) {
         return -1;
@@ -259,9 +294,13 @@ static int rpc_send_msg(int fd, const char *selector, plist_t args) {
                         plist_new_string(selector));
     plist_dict_set_item(rpc_dict, "__argument", plist_copy(args));
 
-
-    int ret = send_plist(fd, rpc_dict);
-
+    int ret;
+    SSL *ssl = map_get_ssl_(fd);
+    if (ssl) {
+        ret = plist_util_send_by_ssl(ssl, rpc_dict);
+    } else {
+        ret = plist_util_send_by_fd(fd, rpc_dict);
+    }
     plist_free(rpc_dict);
     return ret;
 }
@@ -397,12 +436,15 @@ int device_attach(const char *device_id, int device_num) {
     if (max_fd_ < fd) {
         max_fd_ = fd;
     }
-    map_set(fd_map_, fd, ssl);
-
-
     // start inspector
     char *connectionID = NULL;
     rpc_new_uuid(&connectionID);
+
+    DeviceInfo_ *deviceInfo = map_set_by_fd_(fd);
+    deviceInfo->connectionID = connectionID;
+    deviceInfo->ssl = ssl;
+    deviceInfo->fd = fd;
+
     if (rpc_send_reportIdentifier(fd, connectionID) < 0) {
         // TODO
     }
@@ -445,17 +487,22 @@ int wi_parse_length(const char *buf, size_t *to_length) {
     return 0;
 }
 
-int wi_parse_plist(const char *from_buf, size_t length, plist_t *to_rpc_dict, bool *to_is_partial) {
+static int device_parse_plist(DeviceInfo_ *deviceInfo,
+                              const char *from_buf, size_t length,
+                              plist_t *to_rpc_dict,
+                              bool *to_is_partial) {
     *to_is_partial = false;
     *to_rpc_dict = NULL;
 
     // TODO
+//    bool is_sim = !strcmp(device_id, "SIMULATOR");
+//    partials_supported = !is_sim;
     bool partials_supported = false;
     if (!partials_supported) {
-        plist_from_bin(from_buf, length, to_rpc_dict);
+        plist_from_bin(from_buf, (uint32_t) length, to_rpc_dict);
     } else {
         plist_t wi_dict = NULL;
-        plist_from_bin(from_buf, length, &wi_dict);
+        plist_from_bin(from_buf, (uint32_t) length, &wi_dict);
         if (!wi_dict) {
             return -1;
         }
@@ -475,46 +522,91 @@ int wi_parse_plist(const char *from_buf, size_t length, plist_t *to_rpc_dict, bo
         if (!rpc_bin) {
             return -1;
         }
-        // assert rpc_len < MAX_RPC_LEN?
 
-//        size_t p_length = my->partial->tail - my->partial->head;
-//        if (*to_is_partial || p_length) {
-//            if (cb_ensure_capacity(my->partial, rpc_len)) {
-//                return self->on_error(self, "Out of memory");
-//            }
-//            memcpy(my->partial->tail, rpc_bin, rpc_len);
-//            my->partial->tail += rpc_len;
-//            p_length += rpc_len;
-//            free(rpc_bin);
-//            if (*to_is_partial) {
-//                return 0;
-//            }
-//        }
-//
-//        if (p_length) {
-//            plist_from_bin(my->partial->head, (uint32_t)p_length, to_rpc_dict);
-//            cb_clear(my->partial);
-//        } else {
-//            plist_from_bin(rpc_bin, (uint32_t)rpc_len, to_rpc_dict);
-//            free(rpc_bin);
-//        }
+        if (*to_is_partial || deviceInfo->recvSize) {
+            int result = device_append_recv_data(deviceInfo, rpc_bin, rpc_len);
+            free(rpc_bin);
+            if (result < 0) {
+                return result;
+            }
+            if (*to_is_partial) {
+                return 0;
+            }
+        }
+
+        if (deviceInfo->recvSize) {
+            plist_from_bin(deviceInfo->recvData, (uint32_t) deviceInfo->recvSize, to_rpc_dict);
+            device_free_recv_data(deviceInfo);
+        } else {
+            plist_from_bin(rpc_bin, (uint32_t) rpc_len, to_rpc_dict);
+            free(rpc_bin);
+        }
     }
 
     return (*to_rpc_dict ? 0 : -1);
 }
 
-static int device_on_recv_(const char *packet, size_t length) {
-    printf("%s:%d %s| length: %zu, message:%s\n",
-           __FILE__, __LINE__, __FUNCTION__,
-           length, packet);
+static int device_on_packet_(DeviceInfo_ *deviceInfo, plist_t rpc_dict) {
+    char *selector = NULL;
+    plist_get_string_val(plist_dict_get_item(rpc_dict, "__selector"), &selector);
+
+    if (!selector) {
+        return -1;
+    }
+    plist_t args = plist_dict_get_item(rpc_dict, "__argument");
 
 
+    if (!strcmp(selector, "_rpc_reportSetup:")) {
+        //      if (!rpc_recv_reportSetup(self, args)) {
+        //        return RPC_SUCCESS;
+        //      }
+        return 0;
+    } else if (!strcmp(selector, "_rpc_reportConnectedApplicationList:")) {
+        plist_t list = plist_dict_get_item(args, "WIRApplicationDictionaryKey");
+        return app_list_update(deviceInfo->fd, deviceInfo->ssl, deviceInfo->connectionID, list);
+    } else if (!strcmp(selector, "_rpc_applicationConnected:")) {
+        return app_connected(deviceInfo->fd, deviceInfo->ssl, deviceInfo->connectionID, args);
+    } else if (!strcmp(selector, "_rpc_applicationDisconnected:")) {
+        //      if (!rpc_recv_applicationDisconnected(self, args)) {
+        //        return RPC_SUCCESS;
+        //      }
+        return 0;
+    } else if (!strcmp(selector, "_rpc_applicationSentListing:")) {
+        //      if (!rpc_recv_applicationSentListing(self, args)) {
+        //        return RPC_SUCCESS;
+        //      }
+
+        return 0;
+    } else if (!strcmp(selector, "_rpc_applicationSentData:")) {
+        //      if (!rpc_recv_applicationSentData(self, args)) {
+        //        return RPC_SUCCESS;
+        //      }
+
+        return 0;
+    } else if (!strcmp(selector, "_rpc_applicationUpdated:")) {
+        //      if (!rpc_recv_applicationUpdated(self, args)) {
+        //        return RPC_SUCCESS;
+        //      }
+        return 0;
+    } else if (!strcmp(selector, "_rpc_reportConnectedDriverList:") || !strcmp(selector, "_rpc_reportCurrentState:")) {
+
+        return 0;
+    } else {
+        printf("%s:%d %s| unsupported selector: %s\n",
+               __FILE__, __LINE__, __FUNCTION__,
+               selector);
+        return -1;
+    }
+}
+
+static int device_on_recv_packet_(void *userData, const char *packet, size_t length) {
+    DeviceInfo_ *deviceInfo = (DeviceInfo_ *) userData;
     size_t body_length = 0;
     plist_t rpc_dict = NULL;
     bool is_partial = false;
     if (!packet || length < 4 || wi_parse_length(packet, &body_length) ||
         //TODO (body_length != length - 4) ||
-        wi_parse_plist(packet + 4, body_length, &rpc_dict, &is_partial)) {
+        device_parse_plist(deviceInfo, packet + 4, body_length, &rpc_dict, &is_partial) < 0) {
         // invalid packet
         char *text = NULL;
         if (body_length != length - 4) {
@@ -534,7 +626,8 @@ static int device_on_recv_(const char *packet, size_t length) {
     }
     char *json_data = NULL;
     uint32_t json_length = 0;
-    if (plist_to_openstep(rpc_dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
+    plist_err_t plistError = plist_to_json(rpc_dict, &json_data, &json_length, true);
+    if (plistError == PLIST_ERR_SUCCESS) {
         printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
         free(json_data);
     }
@@ -542,20 +635,80 @@ static int device_on_recv_(const char *packet, size_t length) {
     if (is_partial) {
         return 0;
     }
-    // TODO
-//    wi_status ret = self->recv_plist(self, rpc_dict);
+    int ret = device_on_packet_(deviceInfo, rpc_dict);
     plist_free(rpc_dict);
-//    return ret;
+    return ret;
+}
 
+static int device_on_recv_(void *userData, const char *packet, size_t length) {
+    DeviceInfo_ *deviceInfo = (DeviceInfo_ *) userData;
+    const char *in_head;
+    size_t in_length;
+    if (deviceInfo->recvSize) {
+        device_append_recv_data(deviceInfo, packet, length);
+        in_head = deviceInfo->recvRead;
+        in_length = deviceInfo->recvSize - (deviceInfo->recvRead - deviceInfo->recvData);
+    } else {
+        in_head = packet;
+        in_length = length;
+    }
+    const char *in_tail = in_head + in_length;
+
+    int ret;
+    bool has_length = false;
+    size_t body_length = 0;
+    while (1) {
+        if (!has_length && in_length >= 4) {
+            // can read body_length now
+            size_t len;
+            ret = wi_parse_length(in_head, &len);
+            if (ret < 0) {
+                in_head += 4;
+                break;
+            }
+            body_length = len;
+            has_length = true;
+            // don't advance in_head yet
+        } else if (has_length && in_length >= body_length + 4) {
+            // can read body now
+            printf("%s:%d %s| have: %zu, use: %zu\n",
+                   __FILE__, __LINE__, __FUNCTION__,
+                   in_length, body_length + 4);
+            ret = device_on_recv_packet_(deviceInfo, in_head, body_length + 4);
+            in_head += body_length + 4;
+            in_length -= body_length + 4;
+            has_length = false;
+            body_length = 0;
+            if (ret) {
+                break;
+            }
+        } else {
+            // need more input
+            ret = 0;
+            break;
+        }
+    }
+
+    if (in_head == in_tail) {
+        if (deviceInfo->recvSize) {
+            device_free_recv_data(deviceInfo);
+        }
+    } else {
+        if (deviceInfo->recvSize) {
+            deviceInfo->recvRead = (void *) in_head;
+        } else {
+            device_append_recv_data(deviceInfo, in_head, in_length);
+        }
+    }
     return 0;
 }
 
 static int device_on_recv_ready_(int fd) {
-    SSL *ssl = map_get(fd_map_, fd);
-    if (ssl) {
-        ssl_recv(ssl, device_on_recv_);
+    DeviceInfo_ *deviceInfo = map_get_device_info_(fd);
+    if (deviceInfo->ssl) {
+        ssl_recv(deviceInfo->ssl, device_on_recv_, deviceInfo);
     } else {
-        fd_recv(fd, device_on_recv_);
+        fd_recv(fd, device_on_recv_, deviceInfo);
     }
     return 0;
 }

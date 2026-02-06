@@ -118,7 +118,7 @@ static uint32_t dl_sscanf_uint32(const char *buf) {
     return ret;
 }
 
-static int usb_muxd_on_recv_(const char *packet, size_t length) {
+static int usbmuxd_on_recv_packet_(const char *packet, size_t length) {
     const char *tail = packet;
     uint32_t len = dl_sscanf_uint32(tail);
     tail += 4;
@@ -144,7 +144,7 @@ static int usb_muxd_on_recv_(const char *packet, size_t length) {
     if (dict) {
         char *json_data = NULL;
         uint32_t json_length = 0;
-        plist_err_t plistErrorCode = plist_to_openstep(dict, &json_data, &json_length, true);
+        plist_err_t plistErrorCode = plist_to_json(dict, &json_data, &json_length, true);
         if (plistErrorCode == PLIST_ERR_SUCCESS) {
             printf("%s:%d %s| \n%s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
             free(json_data);
@@ -226,7 +226,7 @@ static int usb_muxd_on_recv_(const char *packet, size_t length) {
     return ret;
 }
 
-static int usbmuxd_on_recv_(const char *data, size_t length) {
+static int usbmuxd_on_recv_(void *userData, const char *data, size_t length) {
     bool has_body_length = false;
     size_t body_length = 0;
     size_t data_length = length;
@@ -239,7 +239,7 @@ static int usbmuxd_on_recv_(const char *data, size_t length) {
             // don't advance in_head yet
         } else if (has_body_length && data_length >= body_length) {
             // can read body now
-            int ret = usb_muxd_on_recv_(data, body_length);
+            int ret = usbmuxd_on_recv_packet_(data, body_length);
             data += body_length;
             data_length -= body_length;
             has_body_length = false;
@@ -257,7 +257,7 @@ static int usbmuxd_on_recv_(const char *data, size_t length) {
 }
 
 static int usbmuxd_on_recv_ready_(int fd) {
-    return fd_recv(fd, usbmuxd_on_recv_);
+    return fd_recv(fd, usbmuxd_on_recv_, 0);
 }
 
 int usbmuxd_on_loop(void) {

@@ -54,7 +54,7 @@ int ssl_send(SSL *ssl, const char *data, size_t length) {
     return 0;
 }
 
-int fd_recv(int fd, data_on_recv on_recv) {
+int fd_recv(int fd, data_on_recv on_recv, void *userData) {
     const int tmp_buf_length = 4096;
     char *tmp_buf[tmp_buf_length];
 
@@ -74,14 +74,14 @@ int fd_recv(int fd, data_on_recv on_recv) {
         printf("%s:%d %s| fd: %d, bytes: %zi\n",
                __FILE__, __LINE__, __FUNCTION__,
                fd, read_bytes);
-        int result = on_recv((const char *) tmp_buf, read_bytes);
+        int result = on_recv(userData, (const char *) tmp_buf, read_bytes);
         if (result < 0) {
             return result;
         }
     }
 }
 
-int ssl_recv(SSL *ssl, data_on_recv on_recv) {
+int ssl_recv(SSL *ssl, data_on_recv on_recv, void *userData) {
     const int tmp_buf_length = 4096;
     char *tmp_buf[tmp_buf_length];
 
@@ -104,7 +104,7 @@ int ssl_recv(SSL *ssl, data_on_recv on_recv) {
         printf("%s:%d %s| ssl: %p, bytes: %d\n",
                __FILE__, __LINE__, __FUNCTION__,
                ssl, read_bytes);
-        int result = on_recv((const char *) tmp_buf, read_bytes);
+        int result = on_recv(userData, (const char *) tmp_buf, read_bytes);
         if (result < 0) {
             return result;
         }

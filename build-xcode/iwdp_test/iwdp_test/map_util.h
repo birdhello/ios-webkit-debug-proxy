@@ -23,3 +23,5 @@ bool map_node_valid(Map *map, MapNode *node);
 bool map_node_remove(Map *map, MapNode *node);
 
 void map_node_modify(MapNode *node, void *value);
+
+void *map_node_get(MapNode *node);

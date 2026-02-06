@@ -268,6 +268,9 @@ wi_status wi_send_plist(wi_t self, plist_t rpc_dict) {
     if (plist_to_json(rpc_dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
         printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
         free(json_data);
+    } else if (plist_to_xml(rpc_dict, &json_data, &json_length) == PLIST_ERR_SUCCESS) {
+        printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
+        free(json_data);
     }
   wi_private_t my = self->private_state;
   char *rpc_bin = NULL;
@@ -418,6 +421,9 @@ wi_status wi_recv_packet(wi_t self, const char *packet, ssize_t length) {
     } else {
       cb_asprint(&text, packet, length, 80, 50);
     }
+    printf("%s:%d %s| Invalid packet:\n%s\n",
+            __FILE__, __LINE__, __FUNCTION__,
+            text);
     wi_status ret = self->on_error(self, "Invalid packet:\n%s\n", text);
     free(text);
     return ret;
@@ -425,6 +431,9 @@ wi_status wi_recv_packet(wi_t self, const char *packet, ssize_t length) {
     char *json_data = NULL;
     uint32_t json_length = 0;
     if (plist_to_json(rpc_dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
+        printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
+        free(json_data);
+    } else if (plist_to_xml(rpc_dict, &json_data, &json_length) == PLIST_ERR_SUCCESS) {
         printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
         free(json_data);
     }
