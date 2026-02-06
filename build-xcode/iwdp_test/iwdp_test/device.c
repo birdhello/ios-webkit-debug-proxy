@@ -445,6 +445,13 @@ int device_attach(const char *device_id, int device_num) {
     deviceInfo->ssl = ssl;
     deviceInfo->fd = fd;
 
+    char *deviceInfoStr = device_info_to_string(deviceInfo);
+    printf("%s:%d %s| %s\n",
+           __FILE__, __LINE__, __FUNCTION__,
+           deviceInfoStr);
+    free(deviceInfoStr);
+
+
     if (rpc_send_reportIdentifier(fd, connectionID) < 0) {
         // TODO
     }
