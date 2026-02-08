@@ -4,20 +4,7 @@
 #include <string.h>
 
 #include "message_util.h"
-
-int plist_util_get_string(plist_t plist, const char *key, char **dest) {
-    plist_t item = plist_dict_get_item(plist, key);
-    plist_type plistType = plist_get_node_type(item);
-    if (plistType == PLIST_STRING) {
-        plist_get_string_val(item, dest);
-        return 0;
-    } else {
-        printf("%s:%d %s| key: %s, type: %d != %d(PLIST_STRING)\n",
-               __FILE__, __LINE__, __FUNCTION__,
-               key, plistType, PLIST_STRING);
-    }
-    return -1;
-}
+#include "logger.h"
 
 int plist_util_get_bool(plist_t plist, const char *key, bool *dest) {
     plist_t item = plist_dict_get_item(plist, key);
@@ -28,13 +15,49 @@ int plist_util_get_bool(plist_t plist, const char *key, bool *dest) {
         *dest = value ? true : false;
         return 0;
     } else {
-        printf("%s:%d %s| key: %s, type: %d != %d(PLIST_BOOLEAN)\n",
-               __FILE__, __LINE__, __FUNCTION__,
-               key, plistType, PLIST_BOOLEAN);
+        LogE("key: %s, type: %d != %d(PLIST_BOOLEAN)",
+             key, plistType, PLIST_BOOLEAN);
     }
     return -1;
 }
 
+int plist_util_get_uint64(plist_t plist, const char *key, uint64_t *dest) {
+    plist_t item = plist_dict_get_item(plist, key);
+    plist_type plistType = plist_get_node_type(item);
+    if (plistType != PLIST_INT) {
+        LogE("key: %s, type: %d != %d(PLIST_INT)",
+             key, plistType, PLIST_INT);
+        return -1;
+    }
+    plist_get_uint_val(item, dest);
+    return 0;
+}
+
+int plist_util_get_string(plist_t plist, const char *key, char **dest) {
+    plist_t item = plist_dict_get_item(plist, key);
+    plist_type plistType = plist_get_node_type(item);
+    if (plistType == PLIST_STRING) {
+        plist_get_string_val(item, dest);
+        return 0;
+    } else {
+        LogE("key: %s, type: %d != %d(PLIST_STRING)",
+             key, plistType, PLIST_STRING);
+    }
+    return -1;
+}
+
+int plist_util_get_dict(plist_t plist, const char *key, plist_t *dest) {
+    plist_t item = plist_dict_get_item(plist, key);
+    plist_type plistType = plist_get_node_type(item);
+    if (plistType == PLIST_DICT) {
+        *dest = item;
+        return 0;
+    } else {
+        LogE("key: %s, type: %d != %d(PLIST_DICT)",
+             key, plistType, PLIST_DICT);
+    }
+    return -1;
+}
 
 static int plist_send_to_bin_(plist_t plist, char **out, size_t *out_len) {
     char *json_data = NULL;

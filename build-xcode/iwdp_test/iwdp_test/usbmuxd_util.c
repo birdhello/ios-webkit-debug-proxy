@@ -13,6 +13,7 @@
 
 #include <plist/plist.h>
 
+#include "logger.h"
 #include "message_util.h"
 #include "fd_util.h"
 #include "device.h"
@@ -96,10 +97,10 @@ int usbmuxd_device_listener(int fd) {
         return -1;
     }
     char *tail = packet;
-    tail = sprintf_uint32_(tail, (uint32_t) length);
-    tail = sprintf_uint32_(tail, 1); // version: 1
-    tail = sprintf_uint32_(tail, TYPE_PLIST); // type: plist
-    tail = sprintf_uint32_(tail, 1); // tag: 1
+    tail = sprintf_uint32_(tail, (uint32_t) length);    // length
+    tail = sprintf_uint32_(tail, 1);                    // version: 1
+    tail = sprintf_uint32_(tail, TYPE_PLIST);           // type: plist
+    tail = sprintf_uint32_(tail, 1);                    // tag: 1
     strncpy(tail, xml, xml_length);
     free(xml);
 
@@ -118,23 +119,72 @@ static uint32_t dl_sscanf_uint32(const char *buf) {
     return ret;
 }
 
+static int rpc_on_result_(plist_t dict) {
+    plist_t node = plist_dict_get_item(dict, "Number");
+    if (node) {
+        uint64_t value = 0;
+        plist_get_uint_val(node, &value);
+        // just an ack of our Listen?
+        if (value) {
+            LogE("number: %" PRIu64, value)
+            return -1;
+        } else {
+            return 0;
+        }
+    } else {
+        LogE("invalid Number key")
+        return -1;
+    }
+}
+
+static int rpc_on_attached_(plist_t dict) {
+    plist_t props = plist_dict_get_item(dict, "Properties");
+    if (!props) {
+        LogE("invalid Properties key")
+        return -1;
+    }
+    return device_on_attached(props);
+}
+
+static int rpc_on_detached_(plist_t dict) {
+    plist_t node = plist_dict_get_item(dict, "DeviceID");
+    if (node) {
+        uint64_t device_num = 0;
+        plist_get_uint_val(node, &device_num);
+        printf("device_num: %" PRIu64"\n", device_num);
+
+        char *device_id = NULL;
+        //            if (device_id) {
+        //                on_detach_(device_id, (int)device_num);
+        //                free(device_id);
+        //            }
+    }
+    return 0;
+}
+
 static int usbmuxd_on_recv_packet_(const char *packet, size_t length) {
+    if (length < 16) {
+        LogD("invalid packet length: %zu < 16", length)
+        return -1;
+    }
     const char *tail = packet;
     uint32_t len = dl_sscanf_uint32(tail);
     tail += 4;
-    if (len != length || len < 16) {
+    if (len != length) {
+        LogD("invalid packet length: %" PRIu32" != bytes: %zu", len, length)
         return -1;
     }
     uint32_t version = dl_sscanf_uint32(tail);
     tail += 4;
     uint32_t type = dl_sscanf_uint32(tail);
     tail += 4;
-    (void)dl_sscanf_uint32(tail);
+    uint32_t tag = dl_sscanf_uint32(tail);
     tail += 4;
     const char *xml = tail;
     size_t xml_length = length - 16;
 
     if (version != 1 || type != TYPE_PLIST) {
+        LogD("len")
         return 0; // ignore?
     }
 
@@ -146,12 +196,11 @@ static int usbmuxd_on_recv_packet_(const char *packet, size_t length) {
         uint32_t json_length = 0;
         plist_err_t plistErrorCode = plist_to_json(dict, &json_data, &json_length, true);
         if (plistErrorCode == PLIST_ERR_SUCCESS) {
-            printf("%s:%d %s| \n%s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
+            LogD("total: %zu, use: %zu\n%s", length, length, json_data);
             free(json_data);
         } else {
-            printf("%s:%d %s| plist_to_json error code: %d, type: %d, xml: \n%s\n",
-                   __FILE__, __LINE__, __FUNCTION__,
-                   plistErrorCode, plist_get_node_type(dict), xml);
+            LogD("plist_to_json error code: %d, type: %d, xml: \n%s",
+                 plistErrorCode, plist_get_node_type(dict), xml);
         }
 
         plist_t node = plist_dict_get_item(dict, "MessageType");
@@ -162,64 +211,15 @@ static int usbmuxd_on_recv_packet_(const char *packet, size_t length) {
 
     int ret = -1;
     if (!messageType) {
-        ret = -1;
-        printf("%s:%d %s| invalid message type\n", __FILE__, __LINE__, __FUNCTION__);
+        LogE("invalid message type is null");
     } else if (!strcmp(messageType, "Result")) {
-        plist_t node = plist_dict_get_item(dict, "Number");
-        if (node) {
-            uint64_t value = 0;
-            plist_get_uint_val(node, &value);
-            // just an ack of our Listen?
-            ret = (value ? -1 : 0);
-        }
+        ret = rpc_on_result_(dict);
     } else if (!strcmp(messageType, "Attached")) {
-        plist_t props = plist_dict_get_item(dict, "Properties");
-        if (props) {
-            uint64_t device_num = 0;
-            plist_t node = plist_dict_get_item(props, "DeviceID");
-            plist_get_uint_val(node, &device_num);
-
-            uint64_t product_id = 0;
-            node = plist_dict_get_item(props, "ProductID");
-            plist_get_uint_val(node, &product_id);
-
-            char *device_id = NULL;
-            node = plist_dict_get_item(props, "SerialNumber");
-            if (node) {
-                plist_get_string_val(node, &device_id);
-
-                if (device_id && strlen(device_id) == 24) {
-                    char *new_device_id = malloc(sizeof(char) * 26);
-
-                    memcpy(new_device_id, device_id, 8);
-                    memcpy(new_device_id + 9, device_id + 8, 17);
-                    new_device_id[8] = '-';
-
-                    free(device_id);
-                    device_id = new_device_id;
-                }
-            }
-
-            uint64_t location = 0;
-            node = plist_dict_get_item(props, "LocationID");
-            plist_get_uint_val(node, &location);
-
-            printf("%s:%d %s| device_id: %s\n", __FILE__, __LINE__, __FUNCTION__, device_id);
-            ret = device_attach(device_id, (int) device_num);
-        }
+        ret = rpc_on_attached_(dict);
     } else if (strcmp(messageType, "Detached") == 0) {
-        plist_t node = plist_dict_get_item(dict, "DeviceID");
-        if (node) {
-            uint64_t device_num = 0;
-            plist_get_uint_val(node, &device_num);
-            printf("device_num: %" PRIu64"\n", device_num);
-
-            char *device_id = NULL;
-//            if (device_id) {
-//                on_detach_(device_id, (int)device_num);
-//                free(device_id);
-//            }
-        }
+        ret = rpc_on_detached_(dict);
+    } else {
+        LogE("unsupported message type: %s", messageType)
     }
     free(messageType);
     plist_free(dict);
@@ -247,10 +247,12 @@ static int usbmuxd_on_recv_(void *userData, const char *data, size_t length) {
             if (ret < 0) {
                 return ret;
             }
-        } else {
+        } else if (data_length > 0) {
             // need more input
             printf("%s:%d %s| need more input, data length origin: %zu, current: %zu\n",
                    __FILE__, __LINE__, __FUNCTION__, length, data_length);
+            return 0;
+        } else {
             return 0;
         }
     }

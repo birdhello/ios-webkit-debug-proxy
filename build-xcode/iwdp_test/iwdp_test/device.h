@@ -1,5 +1,7 @@
 #pragma once
 
+typedef void *plist_t;
+
 int device_on_loop(void);
 
-int device_attach(const char *device_id, int device_num);
+int device_on_attached(plist_t props);

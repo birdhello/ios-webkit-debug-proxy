@@ -6,9 +6,16 @@
 
 typedef struct ssl_st SSL;
 
+int plist_util_get_bool(plist_t plist, const char *key, bool *dest);
+
+int plist_util_get_uint64(plist_t plist, const char *key, uint64_t *dest);
+
 int plist_util_get_string(plist_t plist, const char *key, char **dest);
 
-int plist_util_get_bool(plist_t plist, const char *key, bool *dest);
+int plist_util_get_dict(plist_t plist, const char *key, plist_t *dest);
+
+
+
 
 int plist_util_send_by_fd(int fd, plist_t plist);
 

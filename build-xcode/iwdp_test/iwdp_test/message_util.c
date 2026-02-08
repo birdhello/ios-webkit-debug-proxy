@@ -8,6 +8,8 @@
 
 #include <openssl/ssl.h>
 
+#include "logger.h"
+
 #define FD_SET_SIZE sizeof(struct fd_set)
 
 int fd_send(int fd, const char *data, size_t length) {
@@ -71,9 +73,7 @@ int fd_recv(int fd, data_on_recv on_recv, void *userData) {
         } else if (read_bytes == 0) {
             return 0;
         }
-        printf("%s:%d %s| fd: %d, bytes: %zi\n",
-               __FILE__, __LINE__, __FUNCTION__,
-               fd, read_bytes);
+        LogD("fd: %d, bytes: %zi", fd, read_bytes)
         int result = on_recv(userData, (const char *) tmp_buf, read_bytes);
         if (result < 0) {
             return result;

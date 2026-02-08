@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-#include <malloc/_malloc.h>
 
 #include <libimobiledevice/libimobiledevice.h>
 #include <libimobiledevice/lockdown.h>
@@ -13,10 +12,11 @@
 #include <plist/plist.h>
 
 #include "config.h"
+#include "logger.h"
 #include "iwdp.h"
 #include "fd_util.h"
 #include "message_util.h"
-#include "application_util.h"
+#include "app_util.h"
 #include "map_util.h"
 #include "plist_util.h"
 
@@ -36,16 +36,65 @@ __attribute__((destructor)) static void device_destructor(void) {
 
 typedef struct {
     SSL *ssl;
-    char *connectionID;
     int fd;
+    uint64_t deviceID;
+    uint64_t productID;
+    uint64_t locationID;
+    char *connectionID;
+    char *uniqueDeviceID;
+    char *uuid;
+    char *name;
+    char *productVersionStr;
+    int productVersionInt;
 
     void *recvData;
     size_t recvCapacity;
     size_t recvSize;
     void *recvRead;
-} DeviceInfo_;
+} Device_;
 
-int device_append_recv_data(DeviceInfo_ *deviceInfo, const char *rpc_bin, size_t rpc_len) {
+static Device_ *device_new_(void) {
+    return calloc(1, sizeof(Device_));
+}
+
+static void device_delete_(Device_ *device) {
+    if (device->uuid) {
+        free(device->uuid);
+    }
+    if (device->uniqueDeviceID) {
+        free(device->uniqueDeviceID);
+    }
+    if (device->name) {
+        free(device->name);
+    }
+    if (device->productVersionStr) {
+        free(device->productVersionStr);
+    }
+    if (device->fd > 0) {
+        close(device->fd);
+    }
+}
+
+static int device_to_string_(Device_ *device, char **out) {
+    return asprintf(out,
+                    "deviceID: %" PRIu64
+                    "\n\t productID: %" PRIu64
+                    "\n\t locationID: %" PRIu64
+                    "\n\t uniqueDeviceID: %s"
+                    "\n\t connectionID: %s"
+                    "\n\t uuid: %s"
+                    "\n\t name: %s"
+                    "\n\t version: %s(%d)"
+                    "\n\t fd: %d"
+                    "\n\t ssl: %p"
+                    "\n"
+                    , device->deviceID, device->productID, device->locationID,
+                    device->uniqueDeviceID, device->connectionID, device->uuid
+                    , device->name, device->productVersionStr, device->productVersionInt
+                    , device->fd, device->ssl);
+}
+
+int device_append_recv_data(Device_ *deviceInfo, const char *rpc_bin, size_t rpc_len) {
     size_t needSize = deviceInfo->recvSize + rpc_len;
     if (needSize > deviceInfo->recvCapacity) {
         size_t capacity = deviceInfo->recvCapacity < 4? 4 : deviceInfo->recvCapacity;
@@ -67,7 +116,7 @@ int device_append_recv_data(DeviceInfo_ *deviceInfo, const char *rpc_bin, size_t
     return 0;
 }
 
-void device_free_recv_data(DeviceInfo_ *deviceInfo) {
+void device_free_recv_data(Device_ *deviceInfo) {
     free(deviceInfo->recvData);
     deviceInfo->recvData = 0;
     deviceInfo->recvCapacity = 0;
@@ -75,17 +124,10 @@ void device_free_recv_data(DeviceInfo_ *deviceInfo) {
     deviceInfo->recvRead = 0;
 }
 
-DeviceInfo_ *map_set_by_fd_(int fd) {
-    DeviceInfo_ *deviceInfo = malloc(sizeof(DeviceInfo_));
-    memset(deviceInfo, 0, sizeof(DeviceInfo_));
-    map_set(fd_map_, fd, deviceInfo);
-    return deviceInfo;
-}
-
 void map_remove_by_fd_(int fd) {
-    MapNode *iterator = map_find(fd_map_, fd);
+    MapNode *iterator = map_find(fd_map_, map_create_key_by_int(fd));
     if (iterator) {
-        DeviceInfo_ *deviceInfo = map_node_get(iterator);
+        Device_ *deviceInfo = map_node_get(iterator);
         if (deviceInfo->recvData) {
             free(deviceInfo->recvData);
         }
@@ -94,19 +136,20 @@ void map_remove_by_fd_(int fd) {
     }
 }
 
-DeviceInfo_ *map_get_device_info_(int fd) {
-    return map_get(fd_map_, fd);
+Device_ *map_get_device_info_(int fd) {
+    Device_ *ret = map_get(fd_map_, map_create_key_by_int(fd));
+    return ret;
 }
 
 void map_set_ssl_(int fd, SSL *ssl) {
-    DeviceInfo_ *deviceInfo = map_get(fd_map_, fd);
+    Device_ *deviceInfo = map_get(fd_map_, map_create_key_by_int(fd));
     if (deviceInfo) {
         deviceInfo->ssl = ssl;
     }
 }
 
 SSL *map_get_ssl_(int fd) {
-    DeviceInfo_ *deviceInfo = map_get(fd_map_, fd);
+    Device_ *deviceInfo = map_get(fd_map_, map_create_key_by_int(fd));
     if (deviceInfo) {
         return deviceInfo->ssl;
     }
@@ -166,7 +209,7 @@ static int pair_record_get_item_as_key_data(plist_t pair_record, const char* nam
 
     if (node && plist_get_node_type(node) == PLIST_DATA) {
         plist_get_data_val(node, &buffer, &length);
-        value->data = (unsigned char*)malloc(length+1);
+        value->data = (unsigned char*) malloc(length + 1);
         memcpy(value->data, buffer, length);
         value->data[length] = '\0';
         value->size = (int) length + 1;
@@ -177,9 +220,9 @@ static int pair_record_get_item_as_key_data(plist_t pair_record, const char* nam
     return -1;
 }
 
-static int idevice_ext_connection_enable_ssl(const char *device_id, int fd, SSL **to_session) {
+static int idevice_ext_connection_enable_ssl(const char *uuid, int fd, SSL **to_session) {
   plist_t pair_record = NULL;
-  if (read_pair_record(device_id, &pair_record)) {
+  if (read_pair_record(uuid, &pair_record)) {
     fprintf(stderr, "Failed to read pair record\n");
     return -1;
   }
@@ -269,7 +312,7 @@ int rpc_new_uuid(char **to_uuid) {
     if (!to_uuid) {
         return -1;
     }
-    *to_uuid = (char *)malloc(37);
+    *to_uuid = (char *) malloc(37);
     uuid_t uuid;
     uuid_generate(uuid);
     uuid_unparse_upper(uuid, *to_uuid);
@@ -317,68 +360,81 @@ int rpc_send_reportIdentifier(int fd, const char *connection_id) {
   return ret;
 }
 
-int device_attach(const char *device_id, int device_num) {
-    printf("%s:%d %s| device_id: %s, device_num: %d\n",
-           __FILE__, __LINE__, __FUNCTION__,
-           device_id, device_num);
-    if (!device_id) {
-        printf("Null device_id\n");
-        return -1;
-    }
-    bool fail = true;
+int device_on_attached(plist_t props) {
+    Device_ *device = (Device_ *) calloc(1, sizeof(Device_));
 
     idevice_t phone = NULL;
     lockdownd_client_t client = NULL;
     idevice_connection_t connection = NULL;
-    int fd = -1;
+    int ret = 0;
+    if (plist_util_get_uint64(props, "DeviceID", &device->deviceID) < 0) {
+        LogE("invalid DeviceID")
+        ret = -1;
+        goto error_;
+    }
+    if (plist_util_get_uint64(props, "ProductID", &device->productID) < 0) {
+        LogE("invalid ProductID")
+        ret = -1;
+        goto error_;
+    }
+    if (plist_util_get_string(props, "SerialNumber", &device->uuid) < 0) {
+        LogE("invalid SerialNumber")
+        ret = -1;
+        goto error_;
+    }
+    if (strlen(device->uuid) == 24) {
+        char *new_uuid = malloc(sizeof(char) * 26);
+
+        memcpy(new_uuid, device->uuid, 8);
+        memcpy(new_uuid + 9, device->uuid + 8, 17);
+        new_uuid[8] = '-';
+
+        free(device->uuid);
+        device->uuid = new_uuid;
+    }
+    if (plist_util_get_uint64(props, "LocationID", &device->locationID) < 0) {
+        LogE("invalid LocationID")
+        ret = -1;
+        goto error_;
+    }
 
     // get phone
-    if (idevice_new_with_options(&phone, device_id, IDEVICE_LOOKUP_USBMUX | IDEVICE_LOOKUP_NETWORK)) {
-      fprintf(stderr, "No device found, is it plugged in?\n");
-      goto leave_cleanup;
+    idevice_error_t deviceError = idevice_new_with_options(&phone,
+                                                           device->uuid,
+                                                           IDEVICE_LOOKUP_USBMUX | IDEVICE_LOOKUP_NETWORK);
+    if (deviceError != IDEVICE_E_SUCCESS) {
+        LogE("idevice_new_with_options error code: %d", deviceError)
+        ret = -1;
+        goto error_;
     }
 
     // connect to lockdownd
     lockdownd_error_t ldret = lockdownd_client_new_with_handshake(phone, &client, "ios_webkit_debug_proxy");
     if (ldret != LOCKDOWN_E_SUCCESS) {
-      fprintf(stderr, "%s\n", lockdownd_err_to_string(ldret));
-      goto leave_cleanup;
+        LogE("lockdownd_client_new_with_handshake error code: %d", ldret)
+        ret = -1;
+        goto error_;
     }
-
     plist_t node = NULL;
     // get device info
-    char *uniqueDeviceID = NULL;
-    if (!lockdownd_get_value(client, NULL, "UniqueDeviceID", &node)) {
-      plist_get_string_val(node, &uniqueDeviceID);
-      plist_free(node);
-      node = NULL;
+    ldret = lockdownd_get_value(client, NULL, "UniqueDeviceID", &node);
+    if (ldret == LOCKDOWN_E_SUCCESS) {
+        plist_get_string_val(node, &device->uniqueDeviceID);
+        plist_free(node);
     }
-    printf("%s:%d %s| UniqueDeviceID: %s\n",
-           __FILE__, __LINE__, __FUNCTION__,
-           uniqueDeviceID);
-    char *deviceName = NULL;
-    if (!lockdownd_get_value(client, NULL, "DeviceName", &node)) {
-      plist_get_string_val(node, &deviceName);
-      plist_free(node);
-      node = NULL;
+    ldret = lockdownd_get_value(client, NULL, "DeviceName", &node);
+    if (ldret == LOCKDOWN_E_SUCCESS) {
+        plist_get_string_val(node, &device->name);
+        plist_free(node);
     }
-    printf("%s:%d %s| DeviceName: %s\n",
-           __FILE__, __LINE__, __FUNCTION__,
-           deviceName);
-    int productVersion = 0;
-    if (!lockdownd_get_value(client, NULL, "ProductVersion", &node)) {
+    ldret = lockdownd_get_value(client, NULL, "ProductVersion", &node);
+    if (ldret == LOCKDOWN_E_SUCCESS) {
         int vers[3] = {0, 0, 0};
-        char *s_version = NULL;
-        plist_get_string_val(node, &s_version);
-        if (s_version && sscanf(s_version, "%d.%d.%d", &vers[0], &vers[1], &vers[2]) >= 2) {
-            productVersion = ((vers[0] & 0xFF) << 16) | ((vers[1] & 0xFF) << 8) | (vers[2] & 0xFF);
-            printf("%s:%d %s| ProductVersion: %s to int: %d\n",
-                   __FILE__, __LINE__, __FUNCTION__,
-                   s_version, productVersion);
-        } else {
-            productVersion = 0;
+        plist_get_string_val(node, &device->productVersionStr);
+        if (device->productVersionStr &&
+            sscanf(device->productVersionStr, "%d.%d.%d", &vers[0], &vers[1], &vers[2]) >= 2) {
+            device->productVersionInt = ((vers[0] & 0xFF) << 16) | ((vers[1] & 0xFF) << 8) | (vers[2] & 0xFF);
         }
-        free(s_version);
         plist_free(node);
     }
 
@@ -386,86 +442,79 @@ int device_attach(const char *device_id, int device_num) {
     // start webinspector, get port
     ldret = lockdownd_start_service(client, "com.apple.webinspector", &service);
     if (ldret != LOCKDOWN_E_SUCCESS || !service || !service->port) {
-      fprintf(stderr, "Could not start com.apple.webinspector! Error code: %d\n", ldret);
-      goto leave_cleanup;
+        LogE("service(com.apple.webinspector) start error code:%d", ldret)
+        ret = -1;
+        goto error_;
     }
-    printf("%s:%d %s| webinspector port: %" PRIu16", ssl_enabled: %" PRIu8", identifier: %s\n",
-           __FILE__, __LINE__, __FUNCTION__,
-           service->port, service->ssl_enabled, service->identifier);
-
     // connect to webinspector
-    if (idevice_connect(phone, service->port, &connection)) {
-      perror("idevice_connect failed!");
-      goto leave_cleanup;
+    deviceError = idevice_connect(phone, service->port, &connection);
+    if (deviceError != IDEVICE_E_SUCCESS) {
+        LogE("device connect service(com.apple.webinspector) error code:%d", deviceError)
+        ret = -1;
+        goto error_;
     }
-
-    if (client) {
-      // not needed anymore
-      lockdownd_client_free(client);
-      client = NULL;
-    }
-
     // extract the connection fd
-    if (idevice_connection_get_fd(connection, &fd)) {
-      perror("Unable to get connection file descriptor.");
-      goto leave_cleanup;
+    if (idevice_connection_get_fd(connection, &device->fd)) {
+        LogE("Unable to get connection file descriptor.");
+        ret = -1;
+        goto error_;
     }
-    printf("%s:%d %s| fd: %d\n",
-           __FILE__, __LINE__, __FUNCTION__,
-           fd);
 
-    SSL *ssl = NULL;
     // enable ssl
     if (service->ssl_enabled == 1) {
-      int ssl_ret = idevice_ext_connection_enable_ssl(device_id, fd, &ssl);
-      if (ssl_ret) {
-        fprintf(stderr, "SSL connection failed! Error code: %d\n", ssl_ret);
-        goto leave_cleanup;
-      }
+        int ssl_ret = idevice_ext_connection_enable_ssl(device->uuid,
+                                                        device->fd,
+                                                        &device->ssl);
+        if (ssl_ret) {
+            LogE("SSL connection failed! Error code: %d", ssl_ret);
+            ret = -1;
+            goto error_;
+        }
     }
-    printf("%s:%d %s| ssl: %p\n",
-           __FILE__, __LINE__, __FUNCTION__,
-           ssl);
 
-    if (fd_set_timeout(fd, -1) < 0) {
-        goto leave_cleanup;
-    }
-    fail = false;
-    
-    FD_SET(fd, &fd_set_);
-    if (max_fd_ < fd) {
-        max_fd_ = fd;
+    if (fd_set_timeout(device->fd, -1) < 0) {
+        LogE("fd_set_timeout fail");
+        ret = -1;
+        goto error_;
     }
     // start inspector
-    char *connectionID = NULL;
-    rpc_new_uuid(&connectionID);
+    rpc_new_uuid(&device->connectionID);
 
-    DeviceInfo_ *deviceInfo = map_set_by_fd_(fd);
-    deviceInfo->connectionID = connectionID;
-    deviceInfo->ssl = ssl;
-    deviceInfo->fd = fd;
-
-    char *deviceInfoStr = device_info_to_string(deviceInfo);
-    printf("%s:%d %s| %s\n",
-           __FILE__, __LINE__, __FUNCTION__,
-           deviceInfoStr);
-    free(deviceInfoStr);
-
-
-    if (rpc_send_reportIdentifier(fd, connectionID) < 0) {
-        // TODO
+    char *deviceInfoStr;
+    if (device_to_string_(device, &deviceInfoStr) > 0) {
+        LogD("device: \n\t%s", deviceInfoStr)
+        free(deviceInfoStr);
     }
-
-leave_cleanup:
-    if (fail && fd > 0) {
-        close(fd);
+    FD_SET(device->fd, &fd_set_);
+    if (max_fd_ < device->fd) {
+        max_fd_ = device->fd;
     }
+    MapKey *k = map_create_key_by_int(device->fd);
+    map_set(fd_map_, k, device);
+
+    if (rpc_send_reportIdentifier(device->fd, device->connectionID) < 0) {
+        LogE("rpc_send_reportIdentifier fail");
+        ret = -1;
+        goto error_;
+    }
+    goto success_;
+
+error_:
+    device_delete_(device);
+
+success_:
     // don't call usbmuxd_disconnect(fd)!
-    //idevice_disconnect(connection);
-    free(connection);
-    lockdownd_client_free(client);
-    idevice_free(phone);
-    return fd;
+    // idevice_disconnect(connection);
+    if (connection) {
+        free(connection);
+    }
+    if (client) {
+        lockdownd_client_free(client);
+    }
+    if (phone) {
+        idevice_free(phone);
+    }
+    return ret;
 }
 
 // some arbitrarly limit, to catch bad packets
@@ -494,7 +543,7 @@ int wi_parse_length(const char *buf, size_t *to_length) {
     return 0;
 }
 
-static int device_parse_plist(DeviceInfo_ *deviceInfo,
+static int device_parse_plist(Device_ *deviceInfo,
                               const char *from_buf, size_t length,
                               plist_t *to_rpc_dict,
                               bool *to_is_partial) {
@@ -502,7 +551,7 @@ static int device_parse_plist(DeviceInfo_ *deviceInfo,
     *to_rpc_dict = NULL;
 
     // TODO
-//    bool is_sim = !strcmp(device_id, "SIMULATOR");
+//    bool is_sim = !strcmp(uuid, "SIMULATOR");
 //    partials_supported = !is_sim;
     bool partials_supported = false;
     if (!partials_supported) {
@@ -553,7 +602,7 @@ static int device_parse_plist(DeviceInfo_ *deviceInfo,
     return (*to_rpc_dict ? 0 : -1);
 }
 
-static int device_on_packet_(DeviceInfo_ *deviceInfo, plist_t rpc_dict) {
+static int device_on_packet_(Device_ *deviceInfo, plist_t rpc_dict) {
     char *selector = NULL;
     plist_get_string_val(plist_dict_get_item(rpc_dict, "__selector"), &selector);
 
@@ -579,11 +628,19 @@ static int device_on_packet_(DeviceInfo_ *deviceInfo, plist_t rpc_dict) {
         //      }
         return 0;
     } else if (!strcmp(selector, "_rpc_applicationSentListing:")) {
-        //      if (!rpc_recv_applicationSentListing(self, args)) {
-        //        return RPC_SUCCESS;
-        //      }
-
-        return 0;
+        char *appID;
+        if (plist_util_get_string(args, "WIRApplicationIdentifierKey", &appID) < 0) {
+            return -1;
+        }
+        App *app = app_get(appID);
+        if (!app) {
+            return -1;
+        }
+        plist_t pageList;
+        if (plist_util_get_dict(args, "WIRListingKey", &pageList) < 0) {
+            return -1;
+        }
+        return app_on_sent_listing(app, args);
     } else if (!strcmp(selector, "_rpc_applicationSentData:")) {
         //      if (!rpc_recv_applicationSentData(self, args)) {
         //        return RPC_SUCCESS;
@@ -607,7 +664,7 @@ static int device_on_packet_(DeviceInfo_ *deviceInfo, plist_t rpc_dict) {
 }
 
 static int device_on_recv_packet_(void *userData, const char *packet, size_t length) {
-    DeviceInfo_ *deviceInfo = (DeviceInfo_ *) userData;
+    Device_ *deviceInfo = (Device_ *) userData;
     size_t body_length = 0;
     plist_t rpc_dict = NULL;
     bool is_partial = false;
@@ -631,12 +688,20 @@ static int device_on_recv_packet_(void *userData, const char *packet, size_t len
         free(text);
         return -1;
     }
+
     char *json_data = NULL;
     uint32_t json_length = 0;
-    plist_err_t plistError = plist_to_json(rpc_dict, &json_data, &json_length, true);
-    if (plistError == PLIST_ERR_SUCCESS) {
-        printf("%s:%d %s| %s\n", __FILE__, __LINE__, __FUNCTION__, json_data);
+    if (plist_to_json(rpc_dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
+        LogD("json: \n%s", json_data);
         free(json_data);
+    } else if (plist_to_openstep(rpc_dict, &json_data, &json_length, true) == PLIST_ERR_SUCCESS) {
+        LogD("openstep: \n%s", json_data);
+        free(json_data);
+    } else if (plist_to_xml(rpc_dict, &json_data, &json_length) == PLIST_ERR_SUCCESS) {
+        LogD("xml: \n%s", json_data);
+        free(json_data);
+    } else {
+        LogD("data: \n%.*s", (int) body_length, packet + 4)
     }
 
     if (is_partial) {
@@ -648,7 +713,7 @@ static int device_on_recv_packet_(void *userData, const char *packet, size_t len
 }
 
 static int device_on_recv_(void *userData, const char *packet, size_t length) {
-    DeviceInfo_ *deviceInfo = (DeviceInfo_ *) userData;
+    Device_ *deviceInfo = (Device_ *) userData;
     const char *in_head;
     size_t in_length;
     if (deviceInfo->recvSize) {
@@ -711,7 +776,7 @@ static int device_on_recv_(void *userData, const char *packet, size_t length) {
 }
 
 static int device_on_recv_ready_(int fd) {
-    DeviceInfo_ *deviceInfo = map_get_device_info_(fd);
+    Device_ *deviceInfo = map_get_device_info_(fd);
     if (deviceInfo->ssl) {
         ssl_recv(deviceInfo->ssl, device_on_recv_, deviceInfo);
     } else {

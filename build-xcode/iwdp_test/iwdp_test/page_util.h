@@ -1,13 +1,10 @@
-//
-//  page_util.h
-//  iwdp_test
-//
-//  Created by bird on 2026/2/6.
-//
+#pragma once
 
-#ifndef page_util_h
-#define page_util_h
+typedef void *plist_t;
 
-#include <stdio.h>
+typedef struct ssl_st SSL;
 
-#endif /* page_util_h */
+typedef struct Page_ Page;
+
+int page_update(int fd, SSL *ssl, char *deviceConnectionID, plist_t pagePlist);
+
